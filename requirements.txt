@@ -1,0 +1,24 @@
+# RST — Radio Spectrogram Transformer
+# Dependencies
+
+# Core ML
+torch>=2.0.0
+torchaudio>=2.0.0
+torchvision>=0.15.0
+timm==0.4.5
+
+# Data processing
+numpy>=1.24.0
+scipy>=1.10.0
+h5py>=3.8.0
+blimpy>=2.1.0
+
+# Signal injection (for synthetic data generation)
+setigen>=2.3.0
+
+# Metrics & visualization
+scikit-learn>=1.2.0
+matplotlib>=3.7.0
+
+# Configuration
+pyyaml>=6.0
