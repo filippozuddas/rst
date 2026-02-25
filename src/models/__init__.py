@@ -1,0 +1,1 @@
+"""RST model architecture."""
