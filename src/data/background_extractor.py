@@ -61,7 +61,6 @@ class CadenceInfo:
     """Information about a cadence (6 ON/OFF files)."""
     target_name: str
     date: str
-    telescope: str = 'unknown'
     files: List[Path] = field(default_factory=list)
     n_channels: int = 0
     freq_start: float = 0.0
@@ -150,19 +149,11 @@ class DatasetBuilder:
         date_match = re.search(r'(\d{8})', parent)
         date = date_match.group(1) if date_match else mjd
 
-        # Guess telescope from filename prefix
-        telescope = 'unknown'
-        if 'blc' in name.lower() or 'gbt' in name.lower():
-            telescope = 'GBT'
-        elif 'srt' in name.lower() or 'TIC' in target:
-            telescope = 'SRT'
-
         return {
             'target': target,
             'obs_type': obs_type,
             'mjd': mjd,
             'date': date,
-            'telescope': telescope,
             'filepath': filepath
         }
 
@@ -209,7 +200,6 @@ class DatasetBuilder:
             cadence = CadenceInfo(
                 target_name=file_infos[0]['target'],
                 date=file_infos[0]['date'],
-                telescope=file_infos[0]['telescope'],
                 files=cadence_files
             )
 
@@ -256,15 +246,6 @@ class DatasetBuilder:
         print(f"{'='*60}")
         print(f"  Complete cadences: {len(complete)}")
 
-        # Telescope breakdown
-        by_telescope = defaultdict(int)
-        for c in complete:
-            by_telescope[c.telescope] += 1
-        if len(by_telescope) > 1 or (len(by_telescope) == 1 and 'unknown' not in by_telescope):
-            print(f"\n  By telescope:")
-            for tel, count in sorted(by_telescope.items()):
-                print(f"    {tel}: {count} cadences")
-
         # Band breakdown
         by_band = self.get_cadences_by_band()
         print(f"\n  By frequency band:")
@@ -284,8 +265,7 @@ class DatasetBuilder:
 
             print(f"\n  Sample cadences:")
             for c in complete[:5]:
-                tel_tag = f" [{c.telescope}]" if c.telescope != 'unknown' else ""
-                print(f"    - {c.target_name}{tel_tag} ({c.freq_band}): {c.n_snippets:,} snippets")
+                print(f"    - {c.target_name} ({c.freq_band}): {c.n_snippets:,} snippets")
             if len(complete) > 5:
                 print(f"    ... and {len(complete) - 5} more")
 
@@ -376,8 +356,7 @@ class DatasetBuilder:
                 all_snippets.append(snippets)
                 metadata.extend([{
                     'target': cadence.target_name,
-                    'date': cadence.date,
-                    'telescope': cadence.telescope
+                    'date': cadence.date
                 }] * len(snippets))
 
                 if sum(len(s) for s in all_snippets) >= max_total_snippets:
@@ -400,9 +379,6 @@ class DatasetBuilder:
         output_path = self.output_dir / f"{output_name}.npz"
         np.savez_compressed(output_path, backgrounds=dataset, n_samples=len(dataset))
 
-        # Collect unique telescopes
-        telescopes = list(set(m['telescope'] for m in metadata))
-
         meta_path = self.output_dir / f"{output_name}_metadata.json"
         with open(meta_path, 'w') as f:
             json.dump({
@@ -410,7 +386,6 @@ class DatasetBuilder:
                 'n_cadences': len(cadences),
                 'shape': list(dataset.shape),
                 'fchans': self.SNIPPET_WIDTH,
-                'telescopes': telescopes,
                 'targets': list(set(m['target'] for m in metadata))
             }, f, indent=2)
 
