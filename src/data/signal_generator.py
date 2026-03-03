@@ -94,8 +94,9 @@ class SignalGenerator:
             data=data
         )
 
+        
         frame.add_signal(
-            stg.constant_path(
+            stg.constant_path(      # A constant path is a linear Doppler-drifted signal
                 f_start=frame.get_frequency(index=start_channel),
                 drift_rate=drift_rate * u.Hz / u.s
             ),
@@ -103,6 +104,19 @@ class SignalGenerator:
             stg.gaussian_f_profile(width=width * u.Hz),
             stg.constant_bp_profile(level=1)
         )
+        
+        """frame.add_signal(
+            stg.simple_rfi_path(    # This path randomly varies in frequency, as in some RFI signals
+                f_start=frame.get_frequency(index=start_channel), 
+                drift_rate=drift_rate * u.Hz / u.s, 
+                spread=300*u.Hz, 
+                spread_type='uniform',
+                rfi_type='stationary'
+            ), 
+            stg.constant_t_profile(level=frame.get_intensity(snr=snr)),
+            stg.gaussian_f_profile(width=width * u.Hz),
+            stg.constant_bp_profile(level=1)
+        )"""
 
         signal_info = {
             'snr': snr,
