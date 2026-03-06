@@ -19,10 +19,12 @@ RFI_TYPES: List[str] = [
     'linear',        # Standard linear drift (same as ETI but in all obs)
     'stationary',    # Fixed frequency with jitter
     'random_walk',   # Frequency wanders randomly over time
-    'broadband',     # Wide bandwidth, zero or low drift
     'scintillating', # Intensity oscillates sinusoidally over time
     'pulsed',        # Periodic Gaussian bursts
 ]
+
+# Default weights for weighted RFI type selection
+RFI_TYPE_WEIGHTS: List[float] = [0.40, 0.25, 0.15, 0.12, 0.08]
 
 
 @dataclass
@@ -32,15 +34,30 @@ class SignalParams:
     dt: float = 18.25361108         # Seconds per time bin
     fch1: float = 0                 # MHz (0 for injection on existing data)
 
-    # SNR parameters
-    snr_min: float = 10
-    snr_max: float = 80
-    snr_base: float = 20
-    snr_range: float = 40
+    # SNR parameters — log-uniform sampling in [snr_min, snr_max]
+    snr_min: float = 5.0
+    snr_max: float = 50.0
 
-    # Signal width parameters
-    width_base: float = 50          # Base width in Hz
-    width_drift_factor: float = 18  # Additional width per Hz/s drift
+    # Signal width parameters (|DR|×dt + U(offset_min, offset_max) Hz)
+    width_offset_min: float = 5.0    # Min offset above drift-induced width (Hz)
+    width_offset_max: float = 55.0   # Max offset above drift-induced width (Hz)
+
+    # Drift rate parameters — log-uniform with random sign
+    max_drift_rate: float = 4.0      # Max drift rate in Hz/s
+    min_nonzero_drift: float = 0.01  # Min non-zero drift rate for log sampling
+    zero_drift_prob: float = 0.05    # Probability of exactly zero drift
+
+    # Frequency profile selection
+    freq_profiles: tuple = ('gaussian', 'sinc2')
+    freq_profile_weights: tuple = (0.8, 0.2)
+
+    # Temporal profile selection
+    time_profiles: tuple = ('constant', 'scintillating')
+    time_profile_weights: tuple = (0.6, 0.4)
+
+    # RFI type weights
+    rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating', 'pulsed')
+    rfi_type_weights: tuple = (0.40, 0.25, 0.15, 0.12, 0.08)
 
 
 class SignalGenerator:
@@ -56,29 +73,95 @@ class SignalGenerator:
         self.params = params or SignalParams()
         self.rng = np.random.default_rng(seed)
 
-    def _calculate_drift_rate(self,
-                              start_channel: int,
-                              width: int,
-                              total_time_bins: int) -> float:
-        """Calculate drift rate to traverse the observation."""
-        direction = self.rng.choice([-1, 1])
+    # Sampling helpers
+    def _sample_snr(self) -> float:
+        """Sample SNR from a log-uniform distribution.
 
-        if direction > 0:
-            true_slope = total_time_bins / start_channel
+        Log-uniform produces more low-SNR samples, which better reflects
+        the expected distribution of real signals (weak signals are far
+        more common than strong ones).
+
+        For [5, 50]: median ≈ √(5×50) ≈ 15.8 (vs 27.5 for uniform).
+        """
+        log_min = np.log10(self.params.snr_min)
+        log_max = np.log10(self.params.snr_max)
+        return float(10 ** self.rng.uniform(log_min, log_max))
+
+    def _sample_drift_rate(self) -> Tuple[float, float]:
+        """Sample drift rate from a log-uniform distribution with random sign.
+
+        Includes a small probability of exactly zero drift (default 5%).
+        Log-uniform concentrates most samples at low |DR| (≤ 0.3 Hz/s),
+        matching the distribution of interesting candidates found so far.
+
+        Returns (drift_rate, true_slope) tuple.
+        """
+        if self.rng.random() < self.params.zero_drift_prob:
+            drift_rate = 0.0
         else:
-            true_slope = total_time_bins / (start_channel - width)
+            log_min = np.log10(self.params.min_nonzero_drift)
+            log_max = np.log10(self.params.max_drift_rate)
+            magnitude = 10 ** self.rng.uniform(log_min, log_max)
+            drift_rate = float(magnitude * self.rng.choice([-1, 1]))
 
-        # Convert slope to drift rate with small random perturbation
-        slope = true_slope * (self.params.dt / self.params.df) + self.rng.uniform(0, 3) * direction
-        drift_rate = -1 / slope
+        # Compute true_slope for metadata / intersection checks
+        if abs(drift_rate) < 1e-9:
+            true_slope = 1e9  # effectively infinite (vertical signal)
+        else:
+            slope = -1.0 / drift_rate
+            true_slope = slope / (self.params.dt / self.params.df)
 
         return drift_rate, true_slope
 
     def _calculate_width(self, drift_rate: float) -> float:
-        """Calculate signal width based on drift rate."""
-        base_width = self.rng.uniform(0, self.params.width_base)
-        drift_width = abs(drift_rate) * self.params.width_drift_factor
-        return base_width + drift_width
+        """Width formula: |DR|×dt + U(offset_min, offset_max).
+
+        The |DR|×dt term compensates for the drift within a single time bin,
+        and the random offset prevents quantization artefacts.
+        """
+        drift_component = abs(drift_rate) * self.params.dt
+        offset = self.rng.uniform(self.params.width_offset_min,
+                                  self.params.width_offset_max)
+        return drift_component + offset
+
+    def _select_f_profile(self, width: float):
+        """Select frequency profile based on configured weights.
+
+        Returns a setigen frequency profile function.
+        Available profiles: gaussian (default), sinc² (sinc2).
+        """
+        profiles = list(self.params.freq_profiles)
+        weights = list(self.params.freq_profile_weights)
+        choice = self.rng.choice(profiles, p=weights)
+
+        if choice == 'gaussian':
+            return stg.gaussian_f_profile(width=width * u.Hz), choice
+        elif choice == 'sinc2':
+            return stg.sinc2_f_profile(width=width * u.Hz), choice
+        else:
+            # Fallback to gaussian for unknown profiles
+            return stg.gaussian_f_profile(width=width * u.Hz), 'gaussian'
+
+    def _select_t_profile(self, intensity: float):
+        """Select temporal profile based on configured weights.
+
+        Returns a setigen temporal profile function.
+        Available profiles: constant, scintillating (sine modulation).
+        """
+        profiles = list(self.params.time_profiles)
+        weights = list(self.params.time_profile_weights)
+        choice = self.rng.choice(profiles, p=weights)
+
+        if choice == 'constant':
+            return stg.constant_t_profile(level=intensity), choice
+        elif choice == 'scintillating':
+            period = self.rng.uniform(50, 300) * u.s
+            amplitude = intensity * self.rng.uniform(0.2, 0.5)
+            return stg.sine_t_profile(period=period,
+                                       amplitude=amplitude,
+                                       level=intensity), choice
+        else:
+            return stg.constant_t_profile(level=intensity), 'constant'
 
     def _make_frame(self, data: np.ndarray) -> stg.Frame:
         """Create a setigen Frame from existing data."""
@@ -97,32 +180,40 @@ class SignalGenerator:
                       start_channel: Optional[int] = None) -> Tuple[np.ndarray, dict]:
         """
         Inject a narrowband drifting ETI signal.
+
+        Uses log-uniform SNR and drift rate sampling, with random
+        frequency and temporal profile selection.
+
         Returns (injected data, signal parameters dict).
         """
         tchans, fchans = data.shape
 
         if snr is None:
-            snr = self.rng.uniform(self.params.snr_base,
-                                   self.params.snr_base + self.params.snr_range)
+            snr = self._sample_snr()
 
         if start_channel is None:
             start_channel = self.rng.integers(1, fchans - 1)
 
-        drift_rate, true_slope = self._calculate_drift_rate(start_channel, fchans, tchans)
+        drift_rate, true_slope = self._sample_drift_rate()
         width = self._calculate_width(drift_rate)
 
         # Intercept for tracking
         b = tchans - true_slope * start_channel
 
         frame = self._make_frame(data)
+        intensity = frame.get_intensity(snr=snr)
+
+        # Select profiles
+        f_profile, f_profile_name = self._select_f_profile(width)
+        t_profile, t_profile_name = self._select_t_profile(intensity)
 
         frame.add_signal(
             stg.constant_path(
                 f_start=frame.get_frequency(index=start_channel),
                 drift_rate=drift_rate * u.Hz / u.s
             ),
-            stg.constant_t_profile(level=frame.get_intensity(snr=snr)),
-            stg.gaussian_f_profile(width=width * u.Hz),
+            t_profile,
+            f_profile,
             stg.constant_bp_profile(level=1)
         )
 
@@ -132,7 +223,9 @@ class SignalGenerator:
             'start_channel': start_channel,
             'width': width,
             'slope': true_slope,
-            'intercept': b
+            'intercept': b,
+            'f_profile': f_profile_name,
+            't_profile': t_profile_name,
         }
 
         return frame.data, signal_info
@@ -144,6 +237,12 @@ class SignalGenerator:
         return self.inject_signal(stacked_data, snr)
 
     # RFI signal injection (used for False samples)
+    def _select_rfi_type(self) -> str:
+        """Select RFI type based on configured weights."""
+        types = list(self.params.rfi_types)
+        weights = list(self.params.rfi_type_weights)
+        return str(self.rng.choice(types, p=weights))
+
     def inject_rfi_signal(self,
                           data: np.ndarray,
                           snr: Optional[float] = None,
@@ -153,8 +252,8 @@ class SignalGenerator:
 
         Args:
             data: Input spectrogram (tchans, fchans).
-            snr: Signal-to-noise ratio. If None, sampled randomly.
-            rfi_type: One of RFI_TYPES. If None, picked randomly.
+            snr: Signal-to-noise ratio. If None, sampled log-uniformly.
+            rfi_type: One of RFI_TYPES. If None, picked by weighted random.
 
         Returns:
             (injected data, info dict with rfi_type and parameters).
@@ -162,11 +261,10 @@ class SignalGenerator:
         tchans, fchans = data.shape
 
         if snr is None:
-            snr = self.rng.uniform(self.params.snr_base,
-                                   self.params.snr_base + self.params.snr_range)
+            snr = self._sample_snr()
 
         if rfi_type is None:
-            rfi_type = self.rng.choice(RFI_TYPES)
+            rfi_type = self._select_rfi_type()
 
         start_channel = self.rng.integers(1, fchans - 1)
         frame = self._make_frame(data)
@@ -175,8 +273,8 @@ class SignalGenerator:
 
         # Build path, t_profile, f_profile based on RFI type
         if rfi_type == 'linear':
-            # Same as ETI but will be injected in ALL obs 
-            drift_rate, _ = self._calculate_drift_rate(start_channel, fchans, tchans)
+            # Same as ETI but will be injected in ALL obs (not just ON)
+            drift_rate, _ = self._sample_drift_rate()
             width = self._calculate_width(drift_rate)
             path = stg.constant_path(f_start=f_start,
                                      drift_rate=drift_rate * u.Hz / u.s)
@@ -209,18 +307,9 @@ class SignalGenerator:
             t_prof = stg.constant_t_profile(level=intensity)
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
 
-        elif rfi_type == 'broadband':
-            # Wide bandwidth, zero or very low drift
-            drift_rate = self.rng.uniform(-0.05, 0.05)
-            width = self.rng.uniform(200, 1000) * u.Hz
-            path = stg.constant_path(f_start=f_start,
-                                     drift_rate=drift_rate * u.Hz / u.s)
-            t_prof = stg.constant_t_profile(level=intensity)
-            f_prof = stg.box_f_profile(width=width)
-
         elif rfi_type == 'scintillating':
             # Intensity oscillates sinusoidally over time
-            drift_rate, _ = self._calculate_drift_rate(start_channel, fchans, tchans)
+            drift_rate, _ = self._sample_drift_rate()
             width = self._calculate_width(drift_rate)
             period = self.rng.uniform(50, 300) * u.s
             amplitude = intensity * self.rng.uniform(0.3, 0.8)
