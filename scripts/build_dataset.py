@@ -4,8 +4,8 @@
 RST — Dataset Builder (Orchestrator)
 
 End-to-end pipeline for building RST training datasets:
-1. Extract background snippets from HDF5 files (background_extractor)
-2. Generate True/False samples with signal injection (cadence_generator)
+1. Load real background plates from HDF5 (via background_extractor)
+2. Generate True/False samples with realistic signal injection
 3. Preprocess: stack 6 obs → (96, 1024), compute z-score stats
 4. Save as .npz ready for training
 """
@@ -27,13 +27,15 @@ from src.data.preprocessing import stack_cadence, compute_dataset_stats
 def build_dataset(
     backgrounds_path: str,
     output_dir: str,
-    n_true: int = 5000,
-    n_false: int = 5000,
+    n_true: int = 30000,
+    n_false: int = 30000,
     val_split: float = 0.15,
-    seed: int = 42,
+    seed: int = None,
     fchans: int = 1024,
-    snr_base: float = 20,
-    snr_range: float = 40,
+    snr_min: float = 5.0,
+    snr_max: float = 50.0,
+    eti_only_fraction: float = 0.4,
+    rfi_fraction: float = 0.6,
 ):
     """
     Build train/val .npz datasets from extracted backgrounds.
@@ -42,18 +44,26 @@ def build_dataset(
         backgrounds_path: Path to .npz with extracted backgrounds (from background_extractor).
         output_dir: Directory to save train.npz and val.npz.
         n_true: Number of True (ETI) samples to generate.
-        n_false: Number of False (RFI/noise) samples to generate.
+        n_false: Number of False (RFI) samples to generate.
         val_split: Fraction of data for validation.
-        seed: Random seed.
+        seed: Random seed. None for random generation with parameter logging.
         fchans: Frequency channels per snippet.
-        snr_base: Base SNR for signal injection.
-        snr_range: SNR range for signal injection.
+        snr_min: Minimum SNR for log-uniform sampling.
+        snr_max: Maximum SNR for log-uniform sampling.
+        eti_only_fraction: Fraction of True samples that are ETI-only (vs ETI+RFI).
+        rfi_fraction: Fraction of False samples that contain injected RFI (vs pure background).
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(seed)
 
-    # ---- 1. Load backgrounds ----
+    # If no seed provided, generate one and log it for reproducibility
+    if seed is None:
+        seed = int(rng.integers(0, 2**31))
+        rng = np.random.default_rng(seed)
+        print(f"  Generated random seed: {seed}")
+
+    # Load backgrounds
     print(f"\n{'='*60}")
     print("RST DATASET BUILDER")
     print(f"{'='*60}")
@@ -63,16 +73,26 @@ def build_dataset(
     print(f"  Loaded {len(plate)} backgrounds from {backgrounds_path}")
     print(f"  Shape: {plate.shape}")
 
-    # ---- 2. Initialize cadence generator ----
+    # Initialize cadence generator
     params = CadenceParams(
         fchans=fchans,
-        snr_base=snr_base,
-        snr_range=snr_range,
+        snr_min=snr_min,
+        snr_max=snr_max,
+        eti_only_fraction=eti_only_fraction,
+        rfi_fraction=rfi_fraction,
     )
     gen = CadenceGenerator(params=params, plate=plate, seed=seed)
 
-    # ---- 3. Generate samples ----
+    # Generate samples
     total = n_true + n_false
+    print(f"\n  Configuration:")
+    print(f"    SNR: log-uniform [{snr_min}, {snr_max}]")
+    print(f"    Drift rate: log-uniform ±4 Hz/s")
+    print(f"    True samples: {int(eti_only_fraction*100)}% ETI-only, "
+          f"{int((1-eti_only_fraction)*100)}% ETI+RFI")
+    print(f"    False samples: {int(rfi_fraction*100)}% RFI, "
+          f"{int((1-rfi_fraction)*100)}% pure background")
+    print(f"    Seed: {seed}")
     print(f"\n  Generating {n_true} True + {n_false} False = {total} samples...")
 
     spectrograms = []
@@ -87,7 +107,7 @@ def build_dataset(
         labels.append(1)
 
     # False samples (label = 0)
-    print(f"\n  → False samples (RFI/noise):")
+    print(f"\n  → False samples (RFI):")
     for _ in tqdm(range(n_false), desc="    False"):
         cadence = gen.create_false_sample()
         stacked = stack_cadence(cadence)  # (96, 1024)
@@ -100,7 +120,7 @@ def build_dataset(
     print(f"\n  Dataset shape: {spectrograms.shape}")
     print(f"  Labels: {int(labels.sum())} True, {int(len(labels) - labels.sum())} False")
 
-    # ---- 4. Shuffle and split ----
+    # Shuffle and split
     indices = rng.permutation(total)
     spectrograms = spectrograms[indices]
     labels = labels[indices]
@@ -113,11 +133,11 @@ def build_dataset(
     val_specs = spectrograms[n_train:]
     val_labels = labels[n_train:]
 
-    # ---- 5. Compute normalization stats on train set ----
+    # Compute normalization stats on train set
     mean, std = compute_dataset_stats(train_specs)
     print(f"\n  Train stats: mean={mean:.4f}, std={std:.4f}")
 
-    # ---- 6. Save ----
+    # Save
     train_path = output_dir / "train.npz"
     val_path = output_dir / "val.npz"
 
@@ -136,10 +156,38 @@ def build_dataset(
         std=std,
     )
 
+    # Save generation metadata
+    import json
+    meta = {
+        'seed': seed,
+        'n_true': n_true,
+        'n_false': n_false,
+        'n_train': n_train,
+        'n_val': n_val,
+        'snr_min': snr_min,
+        'snr_max': snr_max,
+        'snr_distribution': 'log_uniform',
+        'drift_rate_distribution': 'log_uniform',
+        'drift_rate_max': 4.0,
+        'eti_only_fraction': eti_only_fraction,
+        'rfi_fraction': rfi_fraction,
+        'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating', 'pulsed'],
+        'freq_profiles': ['gaussian', 'sinc2'],
+        'time_profiles': ['constant', 'scintillating'],
+        'train_mean': mean,
+        'train_std': std,
+        'backgrounds_path': str(backgrounds_path),
+        'n_backgrounds': len(plate),
+    }
+    meta_path = output_dir / "generation_metadata.json"
+    with open(meta_path, 'w') as f:
+        json.dump(meta, f, indent=2)
+
     print(f"\n{'='*60}")
     print(f"✅ DATASET SAVED:")
     print(f"   Train: {train_path} ({n_train} samples)")
     print(f"   Val:   {val_path} ({n_val} samples)")
+    print(f"   Meta:  {meta_path}")
     print(f"   Shape: {train_specs.shape[1:]}")
     print(f"   Stats: mean={mean:.4f}, std={std:.4f}")
     print(f"{'='*60}")
@@ -153,20 +201,24 @@ def main():
                         help='Path to backgrounds .npz (from background_extractor)')
     parser.add_argument('--output', '-o', default='data/processed',
                         help='Output directory for train/val .npz files')
-    parser.add_argument('--n-true', type=int, default=5000,
-                        help='Number of True (ETI) samples')
-    parser.add_argument('--n-false', type=int, default=5000,
-                        help='Number of False (RFI/noise) samples')
+    parser.add_argument('--n-true', type=int, default=30000,
+                        help='Number of True (ETI) samples (default: 30000)')
+    parser.add_argument('--n-false', type=int, default=30000,
+                        help='Number of False (RFI) samples (default: 30000)')
     parser.add_argument('--val-split', type=float, default=0.15,
                         help='Validation split fraction')
-    parser.add_argument('--seed', type=int, default=42,
-                        help='Random seed')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Random seed (default: None = random with logging)')
     parser.add_argument('--fchans', type=int, default=1024,
                         help='Frequency channels per snippet')
-    parser.add_argument('--snr-base', type=float, default=20,
-                        help='Base SNR for signal injection')
-    parser.add_argument('--snr-range', type=float, default=40,
-                        help='SNR range for signal injection')
+    parser.add_argument('--snr-min', type=float, default=5.0,
+                        help='Minimum SNR for log-uniform sampling (default: 5)')
+    parser.add_argument('--snr-max', type=float, default=50.0,
+                        help='Maximum SNR for log-uniform sampling (default: 50)')
+    parser.add_argument('--eti-only-fraction', type=float, default=0.4,
+                        help='Fraction of True samples that are ETI-only (default: 0.4)')
+    parser.add_argument('--rfi-fraction', type=float, default=0.6,
+                        help='Fraction of False samples that contain injected RFI (default: 0.6)')
 
     args = parser.parse_args()
 
@@ -178,8 +230,10 @@ def main():
         val_split=args.val_split,
         seed=args.seed,
         fchans=args.fchans,
-        snr_base=args.snr_base,
-        snr_range=args.snr_range,
+        snr_min=args.snr_min,
+        snr_max=args.snr_max,
+        eti_only_fraction=args.eti_only_fraction,
+        rfi_fraction=args.rfi_fraction,
     )
 
 
