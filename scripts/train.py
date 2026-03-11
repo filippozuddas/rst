@@ -50,6 +50,18 @@ def main():
         '--gpu', type=str, default='0',
         help='GPU ID to use (e.g. "0" or "0,1" for multi-GPU)',
     )
+    parser.add_argument(
+        '--num_workers', type=int, default=4,
+        help='Number of data loading workers (set to 0 if out of shared memory)',
+    )
+    parser.add_argument(
+        '--pin_memory', action='store_true', default=True,
+        help='Whether to use pin_memory in DataLoader',
+    )
+    parser.add_argument(
+        '--no_pin_memory', action='store_false', dest='pin_memory',
+        help='Disable pin_memory in DataLoader',
+    )
     args = parser.parse_args()
 
     # Select GPU
@@ -98,6 +110,8 @@ def main():
         train_path=data_cfg['train_data'],
         val_path=data_cfg['val_data'],
         batch_size=train_cfg['batch_size'],
+        num_workers=args.num_workers,
+        pin_memory=args.pin_memory,
         norm_mean=data_cfg.get('norm_mean'),
         norm_std=data_cfg.get('norm_std'),
         freq_mask=aug_cfg['freq_mask'],

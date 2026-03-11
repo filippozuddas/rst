@@ -19,6 +19,7 @@ import numpy as np
 import torch
 from pathlib import Path
 from tqdm import tqdm
+from typing import Tuple
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -44,7 +45,7 @@ def evaluate(
     """Run inference on the dataset and return (labels, probabilities)."""
     model.eval()
     loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True
+        dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True
     )
 
     all_probs = []

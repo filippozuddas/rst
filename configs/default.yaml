@@ -46,7 +46,7 @@ training:
       lr: 1.0e-5
       epochs: 30
 
-  batch_size: 32
+  batch_size: 64
   mixed_precision: true
   gradient_clip: 1.0
   weight_averaging: true
