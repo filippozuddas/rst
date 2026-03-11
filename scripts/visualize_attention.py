@@ -94,8 +94,8 @@ class AttentionExtractor:
                 x_attn = (attn @ v).transpose(1, 2).reshape(B, N, C)
                 x_attn = blk.attn.proj(x_attn)
                 x_attn = blk.attn.proj_drop(x_attn)
-                x = x + blk.drop_path(x_attn)
-                x = x + blk.drop_path(blk.mlp(blk.norm2(x)))
+                x = x + blk.drop_path1(x_attn)
+                x = x + blk.drop_path2(blk.mlp(blk.norm2(x)))
 
         return x, self.attn_weights
 
@@ -152,7 +152,6 @@ def visualize_attention(
         print(f"✅ Saved visualization to: {output_path}")
     
     plt.show()
-
 
 
 def main():

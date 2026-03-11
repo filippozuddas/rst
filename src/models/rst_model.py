@@ -20,7 +20,10 @@ import torch
 import torch.nn as nn
 
 import timm
-from timm.models.layers import to_2tuple, trunc_normal_
+try:
+    from timm.layers import to_2tuple, trunc_normal_
+except ImportError:
+    from timm.models.layers import to_2tuple, trunc_normal_
 
 
 """
@@ -87,20 +90,25 @@ class RSTModel(nn.Module):
             print(f'Input shape: ({input_tdim}, {input_fdim})')
             print(f'Patch stride: ({fstride}, {tstride})')
 
-        # Override the timm's PatchEmbed with our custom version that accepts arbitrary input sizes
-        timm.models.vision_transformer.PatchEmbed = PatchEmbed
-
         # Instantiate DeiT base model
         model_names = {
-            'tiny224':  'vit_deit_tiny_distilled_patch16_224',
-            'small224': 'vit_deit_small_distilled_patch16_224',
-            'base224':  'vit_deit_base_distilled_patch16_224',
-            'base384':  'vit_deit_base_distilled_patch16_384',
+            'tiny224':  'deit_tiny_distilled_patch16_224',
+            'small224': 'deit_small_distilled_patch16_224',
+            'base224':  'deit_base_distilled_patch16_224',
+            'base384':  'deit_base_distilled_patch16_384',
         }
         if model_size not in model_names:
             raise ValueError(f'model_size must be one of: {list(model_names.keys())}')
 
         self.v = timm.create_model(model_names[model_size], pretrained=imagenet_pretrain)
+
+        # Replace timm's PatchEmbed with our custom version that accepts arbitrary input sizes
+        self.v.patch_embed = PatchEmbed(
+            img_size=self.v.patch_embed.img_size if hasattr(self.v.patch_embed, 'img_size') else 384,
+            patch_size=16,
+            in_chans=3,
+            embed_dim=self.v.embed_dim,
+        )
 
         # Save the original dimensions of the pretrained DeiT model
         self.original_num_patches = self.v.patch_embed.num_patches      # e.g. 576 for 384x384
