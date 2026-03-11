@@ -1,0 +1,58 @@
+# RST Default Configuration
+
+model:
+  name: "rst_base384"
+  label_dim: 1
+  input_fdim: 1024        # Raw frequency channels (no binning)
+  input_tdim: 96           # 6 observations × 16 time bins
+  patch_size: 16
+  stride: 16               # Non-overlapping patches → 384 total
+  model_size: "base384"
+  imagenet_pretrain: true
+
+data:
+  snippet_width: 1024      # Raw channels per snippet (no downsampling)
+  freq_resolution_hz: 2.79 # Hz per channel (native SRT resolution)
+  binning_factor: 1        # 1 = no binning
+  sliding_window_step: 512 # 50% overlap for inference only
+  norm_mean: null           # To be calculated
+  norm_std: null            # To be calculated
+  train_data: "/content/nvme_esterno/filippo/rst/data/processed/train.npz"
+  val_data: "/content/nvme_esterno/filippo/rst/data/processed/val.npz"
+  #test_data: "data/processed/test.npz"
+
+training:
+  # Training mode: "full" (AST-style, single LR) or "progressive" (3-phase unfreezing)
+  mode: "full"
+
+  # --- Full fine-tune mode (default) ---
+  # Recommended with 50k+ samples (diverse SRT backgrounds)
+  lr: 1.0e-5
+  epochs: 25
+
+  # --- Progressive unfreezing mode ---
+  # Recommended with <10k samples or limited background variety
+  phases:
+    - name: "head_only"
+      layers: "head"
+      lr: 1.0e-3
+      epochs: 5
+    - name: "head_and_last_4"
+      layers: "last_4_blocks"
+      lr: 5.0e-5
+      epochs: 15
+    - name: "full_finetune"
+      layers: "all"
+      lr: 1.0e-5
+      epochs: 30
+
+  batch_size: 64
+  mixed_precision: true
+  gradient_clip: 1.0
+  weight_averaging: true
+
+augmentation:
+  freq_mask: 32
+  time_mask: 8
+  mixup_alpha: 0.5
+  drop_path: 0.1

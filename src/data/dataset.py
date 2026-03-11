@@ -118,6 +118,7 @@ def create_dataloaders(
     val_path: str,
     batch_size: int = 32,
     num_workers: int = 4,
+    pin_memory: bool = True,
     norm_mean: Optional[float] = None,
     norm_std: Optional[float] = None,
     freq_mask: int = 32,
@@ -161,7 +162,7 @@ def create_dataloaders(
         batch_size=batch_size,
         shuffle=True,       # Shuffle every epoch
         num_workers=num_workers,
-        pin_memory=True,     # Speed up CPU → GPU transfer
+        pin_memory=pin_memory,     # Speed up CPU → GPU transfer
         drop_last=True,      # Drop the last incomplete batch
     )
 
@@ -170,7 +171,7 @@ def create_dataloaders(
         batch_size=batch_size,
         shuffle=False,       # Don't shuffle during validation
         num_workers=num_workers,
-        pin_memory=True,
+        pin_memory=pin_memory,
         drop_last=False,     # Evaluate all samples
     )
 
