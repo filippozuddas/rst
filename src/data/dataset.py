@@ -33,8 +33,6 @@ class SETIDataset(Dataset):
         self,
         data_path: str,
         is_training: bool = True,
-        norm_mean: Optional[float] = None,
-        norm_std: Optional[float] = None,
         freq_mask: int = 32,
         time_mask: int = 8,
         mixup_alpha: float = 0.5,
@@ -46,10 +44,6 @@ class SETIDataset(Dataset):
         self.spectrograms = data['spectrograms']  # (N, 96, 1024)
         self.labels = data['labels']               # (N,)
 
-        # Normalization statistics
-        # Priority: explicit params > values in file > safe defaults
-        self.mean = norm_mean if norm_mean is not None else float(data.get('mean', 0.0))
-        self.std = norm_std if norm_std is not None else float(data.get('std', 1.0))
 
         # Augmentation settings (active only during training)
         self.is_training = is_training
@@ -60,11 +54,25 @@ class SETIDataset(Dataset):
         print(f'Dataset loaded: {len(self)} samples '
               f'({"TRAIN" if is_training else "EVAL"}), '
               f'shape={self.spectrograms.shape}, '
-              f'mean={self.mean:.4f}, std={self.std:.4f}')
+              f'normalization=sample-wise')
 
     def __len__(self) -> int:
         """How many samples the dataset contains."""
         return len(self.labels)
+
+    @staticmethod
+    def _normalize_sample(spec: np.ndarray) -> np.ndarray:
+        """Sample-wise z-score: (x - μ_sample) / (σ_sample × 2).
+
+        Each spectrogram is standardised independently so that
+        narrowband signals are always visible regardless of the
+        global dynamic range of the dataset.
+        """
+        mu = spec.mean()
+        sigma = spec.std()
+        if sigma < 1e-9:          # guard against constant snippets
+            sigma = 1.0
+        return (spec - mu) / (sigma * 2)
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -79,9 +87,9 @@ class SETIDataset(Dataset):
             - spectrogram: float32 Tensor of shape (96, 1024)
             - label: float32 Tensor of shape (1,)
         """
-        # 1. Load and normalize
+        # 1. Load and normalize (sample-wise)
         spec = self.spectrograms[index].astype(np.float32)
-        spec = (spec - self.mean) / (self.std * 2)
+        spec = self._normalize_sample(spec)
         label = float(self.labels[index])
 
         # Convert to PyTorch tensors
@@ -93,7 +101,7 @@ class SETIDataset(Dataset):
             # Pick a random second sample
             mix_idx = np.random.randint(0, len(self))
             spec2 = self.spectrograms[mix_idx].astype(np.float32)
-            spec2 = (spec2 - self.mean) / (self.std * 2)
+            spec2 = self._normalize_sample(spec2)
             label2 = float(self.labels[mix_idx])
 
             spec2 = torch.from_numpy(spec2)
@@ -119,8 +127,6 @@ def create_dataloaders(
     batch_size: int = 32,
     num_workers: int = 4,
     pin_memory: bool = True,
-    norm_mean: Optional[float] = None,
-    norm_std: Optional[float] = None,
     freq_mask: int = 32,
     time_mask: int = 8,
     mixup_alpha: float = 0.5,
@@ -133,7 +139,6 @@ def create_dataloaders(
         val_path: Path to the validation set .npz file.
         batch_size: Samples per batch (default: 32).
         num_workers: Parallel processes for data loading.
-        norm_mean/std: Normalization statistics.
         freq_mask/time_mask: SpecAugment parameters.
         mixup_alpha: Mixup parameter.
 
@@ -143,8 +148,6 @@ def create_dataloaders(
     train_dataset = SETIDataset(
         data_path=train_path,
         is_training=True,
-        norm_mean=norm_mean,
-        norm_std=norm_std,
         freq_mask=freq_mask,
         time_mask=time_mask,
         mixup_alpha=mixup_alpha,
@@ -153,8 +156,6 @@ def create_dataloaders(
     val_dataset = SETIDataset(
         data_path=val_path,
         is_training=False,
-        norm_mean=norm_mean,
-        norm_std=norm_std,
     )
 
     train_loader = DataLoader(
