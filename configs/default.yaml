@@ -15,11 +15,9 @@ data:
   freq_resolution_hz: 2.79 # Hz per channel (native SRT resolution)
   binning_factor: 1        # 1 = no binning
   sliding_window_step: 512 # 50% overlap for inference only
-  norm_mean: null           # To be calculated
-  norm_std: null            # To be calculated
-  train_data: "/content/nvme_esterno/filippo/rst/data/processed/train.npz"
-  val_data: "/content/nvme_esterno/filippo/rst/data/processed/val.npz"
-  #test_data: "data/processed/test.npz"
+  train_data: "/content/nvme_esterno/filippo/rst/data/processed/ETI_only/train.npz"
+  val_data: "/content/nvme_esterno/filippo/rst/data/processed/ETI_only/val.npz"
+  test_data: "data/processed/test.npz"
 
 training:
   # Training mode: "full" (AST-style, single LR) or "progressive" (3-phase unfreezing)
@@ -46,13 +44,21 @@ training:
       lr: 1.0e-5
       epochs: 30
 
-  batch_size: 64
+  batch_size: 32
   mixed_precision: true
   gradient_clip: 1.0
   weight_averaging: true
+  eta_min: 1.0e-7              # Minimum LR for CosineAnnealingLR
 
 augmentation:
-  freq_mask: 32
-  time_mask: 8
+  freq_mask: 16                # Reduced from 32 to preserve narrowband ETI signals
+  time_mask: 4                 # Reduced from 8 for lighter augmentation
   mixup_alpha: 0.5
   drop_path: 0.1
+
+inference:
+  batch_size: 128             # Optimized for 48GB VRAM
+  sliding_window_step: 512    # 50% overlap (snippet_width=1024)
+  threshold: 0.5              # Classification threshold for ETI
+  attn_threshold: 0.9         # Threshold for attention map generation
+  output_dir: "results/"
