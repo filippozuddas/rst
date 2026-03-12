@@ -39,8 +39,9 @@ class SignalParams:
     snr_max: float = 50.0
 
     # Signal width parameters (|DR|×dt + U(offset_min, offset_max) Hz)
-    width_offset_min: float = 5.0    # Min offset above drift-induced width (Hz)
-    width_offset_max: float = 55.0   # Max offset above drift-induced width (Hz)
+    # ETI signals are narrowband: intrinsic width ~2-15 Hz (~1-5 channels at 2.79 Hz/ch)
+    width_offset_min: float = 2.0    # Min offset above drift-induced width (Hz)
+    width_offset_max: float = 15.0   # Max offset above drift-induced width (Hz)
 
     # Drift rate parameters — log-uniform with random sign
     max_drift_rate: float = 4.0      # Max drift rate in Hz/s
@@ -54,6 +55,10 @@ class SignalParams:
     # Temporal profile selection
     time_profiles: tuple = ('constant', 'scintillating')
     time_profile_weights: tuple = (0.6, 0.4)
+
+    # RFI width parameters — wideband, independent from ETI
+    rfi_width_min: float = 10.0      # Min RFI width (Hz)
+    rfi_width_max: float = 80.0      # Max RFI width (Hz)
 
     # RFI type weights
     rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating', 'pulsed')
@@ -114,14 +119,25 @@ class SignalGenerator:
         return drift_rate, true_slope
 
     def _calculate_width(self, drift_rate: float) -> float:
-        """Width formula: |DR|×dt + U(offset_min, offset_max).
+        """ETI narrowband width: |DR|×dt + U(offset_min, offset_max).
 
         The |DR|×dt term compensates for the drift within a single time bin,
-        and the random offset prevents quantization artefacts.
+        and the random offset adds a small intrinsic width (~1-5 channels).
         """
         drift_component = abs(drift_rate) * self.params.dt
         offset = self.rng.uniform(self.params.width_offset_min,
                                   self.params.width_offset_max)
+        return drift_component + offset
+
+    def _calculate_rfi_width(self, drift_rate: float) -> float:
+        """RFI wideband width: |DR|×dt + U(rfi_width_min, rfi_width_max).
+
+        RFI signals are typically wider than ETI (terrestrial interference,
+        satellites, etc.). Uses a separate, broader width range.
+        """
+        drift_component = abs(drift_rate) * self.params.dt
+        offset = self.rng.uniform(self.params.rfi_width_min,
+                                  self.params.rfi_width_max)
         return drift_component + offset
 
     def _select_f_profile(self, width: float):
@@ -273,19 +289,19 @@ class SignalGenerator:
 
         # Build path, t_profile, f_profile based on RFI type
         if rfi_type == 'linear':
-            # Same as ETI but will be injected in ALL obs (not just ON)
+            # Similar path to ETI but wider and injected in ALL obs
             drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             path = stg.constant_path(f_start=f_start,
                                      drift_rate=drift_rate * u.Hz / u.s)
             t_prof = stg.constant_t_profile(level=intensity)
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
 
         elif rfi_type == 'stationary':
-            # RFI fixed in frequency with random jitter around center
-            spread = self.rng.uniform(50, 500) * u.Hz
-            drift_rate = self.rng.uniform(-0.1, 0.1)
-            width = self.rng.uniform(10, 80) * u.Hz
+            # RFI fixed in frequency with small jitter — like a terrestrial carrier
+            spread = self.rng.uniform(30, 300) * u.Hz
+            drift_rate = self.rng.uniform(-0.5, 0.5)
+            width = self._calculate_rfi_width(drift_rate)
             path = stg.simple_rfi_path(f_start=f_start,
                                        drift_rate=drift_rate * u.Hz / u.s,
                                        spread=spread,
@@ -298,7 +314,7 @@ class SignalGenerator:
             # RFI that wanders in frequency over time
             spread = self.rng.uniform(30, 300) * u.Hz
             drift_rate = self.rng.uniform(-0.5, 0.5)
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             path = stg.simple_rfi_path(f_start=f_start,
                                        drift_rate=drift_rate * u.Hz / u.s,
                                        spread=spread,
@@ -310,7 +326,7 @@ class SignalGenerator:
         elif rfi_type == 'scintillating':
             # Intensity oscillates sinusoidally over time
             drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             period = self.rng.uniform(50, 300) * u.s
             amplitude = intensity * self.rng.uniform(0.3, 0.8)
             path = stg.constant_path(f_start=f_start,
