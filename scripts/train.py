@@ -106,14 +106,14 @@ def main():
     #  Create DataLoaders
     # ------------------------------------------------------------------ #
     print('\n--- Loading data ---')
+    print(f"Train data path: {data_cfg['train_data']}")
+    print(f"Val data path:   {data_cfg['val_data']}")
     train_loader, val_loader = create_dataloaders(
         train_path=data_cfg['train_data'],
         val_path=data_cfg['val_data'],
         batch_size=train_cfg['batch_size'],
         num_workers=args.num_workers,
         pin_memory=args.pin_memory,
-        norm_mean=data_cfg.get('norm_mean'),
-        norm_std=data_cfg.get('norm_std'),
         freq_mask=aug_cfg['freq_mask'],
         time_mask=aug_cfg['time_mask'],
         mixup_alpha=aug_cfg['mixup_alpha'],
