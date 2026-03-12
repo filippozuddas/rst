@@ -190,7 +190,7 @@ def main():
     model.eval()
 
     # Load Data
-    dataset = SETIDataset(args.data, is_training=False, norm_mean=config['data']['norm_mean'], norm_std=config['data']['norm_std'])
+    dataset = SETIDataset(args.data, is_training=False)
     spec_tensor, label_tensor = dataset[args.index]
     label_str = "TRUE (ETI)" if label_tensor.item() > 0.5 else "FALSE (RFI)"
     
