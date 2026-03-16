@@ -19,12 +19,11 @@ RFI_TYPES: List[str] = [
     'linear',        # Standard linear drift (same as ETI but in all obs)
     'stationary',    # Fixed frequency with jitter
     'random_walk',   # Frequency wanders randomly over time
-    'scintillating', # Intensity oscillates sinusoidally over time
-    'pulsed',        # Periodic Gaussian bursts
+    'scintillating'  # Intensity oscillates sinusoidally over time
 ]
 
 # Default weights for weighted RFI type selection
-RFI_TYPE_WEIGHTS: List[float] = [0.40, 0.25, 0.15, 0.12, 0.08]
+RFI_TYPE_WEIGHTS: List[float] = [0.40, 0.15, 0.25, 0.20]
 
 
 @dataclass
@@ -61,8 +60,8 @@ class SignalParams:
     rfi_width_max: float = 80.0      # Max RFI width (Hz)
 
     # RFI type weights
-    rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating', 'pulsed')
-    rfi_type_weights: tuple = (0.40, 0.25, 0.15, 0.12, 0.08)
+    rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating')
+    rfi_type_weights: tuple = (0.40, 0.15, 0.25, 0.20)
 
 
 class SignalGenerator:
@@ -71,7 +70,7 @@ class SignalGenerator:
 
     Methods:
         inject_signal: ETI-like narrowband drifting signal (for True samples)
-        inject_rfi_signal: Diverse RFI patterns (for False samples)
+        inject_rfi_signal: Differents RFI patterns (for False samples)
     """
 
     def __init__(self, params: Optional[SignalParams] = None, seed: Optional[int] = None):
@@ -335,23 +334,6 @@ class SignalGenerator:
                                         amplitude=amplitude,
                                         level=intensity)
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
-
-        elif rfi_type == 'pulsed':
-            # Periodic Gaussian bursts (pulsar-like RFI)
-            drift_rate = self.rng.uniform(-0.3, 0.3)
-            width = self.rng.uniform(10, 60) * u.Hz
-            pulse_period = self.rng.uniform(30, 200) * u.s
-            pulse_width = self.rng.uniform(10, 50) * u.s
-            path = stg.constant_path(f_start=f_start,
-                                     drift_rate=drift_rate * u.Hz / u.s)
-            t_prof = stg.periodic_gaussian_t_profile(
-                pulse_width=pulse_width,
-                period=pulse_period,
-                amplitude=intensity,
-                level=intensity * 0.1,  # Low baseline between pulses
-                pulse_direction='up'
-            )
-            f_prof = stg.gaussian_f_profile(width=width)
 
         else:
             raise ValueError(f"Unknown RFI type: {rfi_type}. Choose from {RFI_TYPES}")
