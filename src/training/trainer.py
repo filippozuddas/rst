@@ -16,10 +16,8 @@ Both modes include:
 import torch
 import torch.nn as nn
 import numpy as np
-import os
-import time
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 from torch.utils.data import DataLoader
 
 # Mixed precision:
@@ -64,11 +62,12 @@ def train(
         'val_loss': [],
         'val_accuracy': [],
         'val_auc': [],
+        'val_f1': [],
         'lr': [],
         'phase': [],
     }
 
-    best_val_loss = float('inf')
+    best_val_f1 = -1.0
     global_epoch = 0
 
     # Build the list of phases depending on mode
@@ -121,13 +120,23 @@ def train(
         optimizer = torch.optim.Adam(
             filter(lambda p: p.requires_grad, model.parameters()),
             lr=lr,
-            weight_decay=5e-7,       # Light regularization
+            weight_decay=1e-4,       # Increased regularization (was 5e-7)
             betas=(0.95, 0.999),     # Same as the AST paper
         )
+
+        # Cosine Annealing: LR decays smoothly from `lr` to `eta_min`
+        # over the phase's epochs. Helps the model "land" on the minimum
+        # instead of oscillating around it.
+        eta_min = config.get('eta_min', 1e-7)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=epochs, eta_min=eta_min,
+        )
+        print(f'  Scheduler: CosineAnnealingLR (eta_min={eta_min})')
 
         # ============= EPOCH LOOP ============= #
         for epoch in range(epochs):
             global_epoch += 1
+            current_lr = optimizer.param_groups[0]['lr']
 
             # --- Training ---
             train_loss = _train_one_epoch(
@@ -136,29 +145,35 @@ def train(
             )
 
             # --- Validation ---
-            val_loss, val_acc, val_auc = _validate(
+            val_loss, val_acc, val_auc, val_f1 = _validate(
                 model, val_loader, loss_fn, device,
             )
+
+            # Step the scheduler (after optimizer.step in _train_one_epoch)
+            scheduler.step()
 
             # Save to history
             history['train_loss'].append(train_loss)
             history['val_loss'].append(val_loss)
             history['val_accuracy'].append(val_acc)
             history['val_auc'].append(val_auc)
-            history['lr'].append(lr)
+            history['val_f1'].append(val_f1)
+            history['lr'].append(current_lr)
             history['phase'].append(phase_name)
 
             print(f'  Epoch {global_epoch:3d} | '
                   f'Train Loss: {train_loss:.4f} | '
                   f'Val Loss: {val_loss:.4f} | '
                   f'Val Acc: {val_acc:.4f} | '
-                  f'Val AUC: {val_auc:.4f}')
+                  f'Val AUC: {val_auc:.4f} | '
+                  f'Val F1: {val_f1:.4f} | '
+                  f'LR: {current_lr:.2e}')
 
-            # Save best model
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
+            # Save best model based on F1
+            if val_f1 > best_val_f1:
+                best_val_f1 = val_f1
                 torch.save(model.state_dict(), save_dir / 'best_model.pth')
-                print(f'  → New best model saved! (val_loss={val_loss:.4f})')
+                print(f'  → New best model saved! (val_f1={val_f1:.4f})')
 
             # Save checkpoint every epoch (for weight averaging)
             torch.save(
@@ -234,7 +249,7 @@ def _validate(
     val_loader: DataLoader,
     loss_fn: nn.Module,
     device: torch.device,
-) -> Tuple[float, float, float]:
+) -> Tuple[float, float, float, float]:
     """
     Evaluate the model on the validation set.
 
@@ -242,7 +257,7 @@ def _validate(
     uses less memory and runs faster (not needed during evaluation).
 
     Returns:
-        Tuple (val_loss, accuracy, auc_roc).
+        Tuple (val_loss, accuracy, auc_roc, f1_score).
     """
     model.eval()
 
@@ -278,14 +293,16 @@ def _validate(
     predictions = (all_preds >= 0.5).astype(int)
     accuracy = float(np.mean(predictions == all_labels.astype(int)))
 
-    # AUC-ROC (if possible)
+    # AUC-ROC and F1
     try:
-        from sklearn.metrics import roc_auc_score
+        from sklearn.metrics import roc_auc_score, f1_score
         auc = float(roc_auc_score(all_labels, all_preds))
+        f1 = float(f1_score(all_labels.astype(int), predictions, zero_division=0))
     except (ImportError, ValueError):
         auc = 0.0  # If only one class is present, AUC is undefined
+        f1 = 0.0
 
-    return avg_loss, accuracy, auc
+    return avg_loss, accuracy, auc, f1
 
 
 def weight_average(
