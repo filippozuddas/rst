@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 from .augmentation import spec_augment, mixup
+from .preprocessing import normalize_robust
 
 
 class SETIDataset(Dataset):
@@ -22,8 +23,6 @@ class SETIDataset(Dataset):
     Args:
         data_path: Path to the .npz file with preprocessed data.
         is_training: If True, applies augmentation.
-        norm_mean: Mean for normalization. If None, uses the value from the file.
-        norm_std: Std for normalization. If None, uses the value from the file.
         freq_mask: SpecAugment param — max frequency channels to mask.
         time_mask: SpecAugment param — max time bins to mask.
         mixup_alpha: Mixup param — α of the Beta distribution. 0 = disabled.
@@ -54,36 +53,11 @@ class SETIDataset(Dataset):
         print(f'Dataset loaded: {len(self)} samples '
               f'({"TRAIN" if is_training else "EVAL"}), '
               f'shape={self.spectrograms.shape}, '
-              f'normalization=sample-wise')
+              f'normalization=log10+per-obs+clip')
 
     def __len__(self) -> int:
         """How many samples the dataset contains."""
         return len(self.labels)
-
-    @staticmethod
-    def _normalize_sample(spec: np.ndarray) -> np.ndarray:
-        """Robust Hybrid Preprocessing for Neural Networks.
-
-        1. Log-Scaling: compresses the huge dynamic range of radio power.
-        2. Per-Observation Z-Score: zero-centers each of the 6 observations
-           independently to remove broadband gain differences (Stripe Bias).
-        3. Clip: removes extreme RFI peaks that survive normalization.
-        """
-        # 1. Log-Scaling (prevent log(0) and NaNs)
-        spec = np.clip(spec, 1e-6, None)
-        spec = np.log10(spec)
-
-        # 2. Per-Observation Normalization (6 observations of 16 rows each)
-        for i in range(6):
-            obs = spec[i*16:(i+1)*16, :]
-            mu = obs.mean()
-            sigma = obs.std()
-            if sigma < 1e-9:          # guard against constant snippets
-                sigma = 1.0
-            spec[i*16:(i+1)*16, :] = (obs - mu) / (sigma * 2)
-
-        # 3. Clip extreme outliers
-        return np.clip(spec, -5, 5)
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -100,7 +74,7 @@ class SETIDataset(Dataset):
         """
         # 1. Load and normalize (sample-wise)
         spec = self.spectrograms[index].astype(np.float32)
-        spec = self._normalize_sample(spec)
+        spec = normalize_robust(spec)
         label = float(self.labels[index])
 
         # Convert to PyTorch tensors
@@ -112,7 +86,7 @@ class SETIDataset(Dataset):
             # Pick a random second sample
             mix_idx = np.random.randint(0, len(self))
             spec2 = self.spectrograms[mix_idx].astype(np.float32)
-            spec2 = self._normalize_sample(spec2)
+            spec2 = normalize_robust(spec2)
             label2 = float(self.labels[mix_idx])
 
             spec2 = torch.from_numpy(spec2)

@@ -12,10 +12,11 @@ import pandas as pd
 import torch
 import yaml
 from pathlib import Path
+from tqdm import tqdm
 from typing import List, Tuple, Optional
 
 from src.models.rst_model import RSTModel
-from src.data.preprocessing import preprocess_cadence
+from src.data.preprocessing import preprocess_cadence, normalize_robust
 
 
 class InferenceEngine:
@@ -49,11 +50,10 @@ class InferenceEngine:
         self.snippet_width = d_cfg.get('snippet_width', 1024)
         self.sliding_step = i_cfg.get('sliding_window_step',
                                        d_cfg.get('sliding_window_step', 512))
-        self.norm_mean = d_cfg.get('norm_mean')
-        self.norm_std = d_cfg.get('norm_std')
         self.batch_size = i_cfg.get('batch_size', 128)
         self.threshold = i_cfg.get('threshold', 0.5)
         self.attn_threshold = i_cfg.get('attn_threshold', 0.9)
+
 
         # Device
         if device is None:
@@ -85,12 +85,15 @@ class InferenceEngine:
         print(f"   Snippet width: {self.snippet_width}, "
               f"Sliding step: {self.sliding_step}")
 
+
+
     def _extract_snippets(
         self,
         cadence: np.ndarray,
     ) -> List[Tuple[int, np.ndarray]]:
         """
         Extract overlapping snippets from a cadence using sliding window.
+        Each snippet is normalised independently (sample-wise z-score).
 
         Args:
             cadence: Array of shape (6, 16, n_freq), raw values.
@@ -103,7 +106,6 @@ class InferenceEngine:
         half = self.snippet_width // 2
         snippets = []
 
-        # Slide from the first valid center to the last
         start_center = half
         end_center = n_freq - half
 
@@ -113,9 +115,8 @@ class InferenceEngine:
                 cadence=cadence,
                 center_channel=center,
                 snippet_width=self.snippet_width,
-                mean=self.norm_mean,
-                std=self.norm_std,
-            )
+            )  # returns raw stacked float32
+            spec = normalize_robust(spec)
             snippets.append((center, spec))
             center += self.sliding_step
 
@@ -125,9 +126,8 @@ class InferenceEngine:
                 cadence=cadence,
                 center_channel=end_center,
                 snippet_width=self.snippet_width,
-                mean=self.norm_mean,
-                std=self.norm_std,
             )
+            spec = normalize_robust(spec)
             snippets.append((end_center, spec))
 
         return snippets
@@ -156,13 +156,22 @@ class InferenceEngine:
 
         all_probs = []
         for (batch,) in loader:
+            # Check for NaNs/Infs in the input (critical for debugging real HDF5 data)
+            if not torch.isfinite(batch).all():
+                n_nan = torch.isnan(batch).sum().item()
+                n_inf = torch.isinf(batch).sum().item()
+                print(f"  ⚠️  WARNING: Input batch contains {n_nan} NaNs and {n_inf} Infs! "
+                      f"Replacing with 0 for this batch.")
+                batch = torch.nan_to_num(batch, nan=0.0, posinf=0.0, neginf=0.0)
+
             batch = batch.to(self.device)
-            with torch.amp.autocast('cuda', enabled=(self.device.type == 'cuda')):
-                logits = self.model(batch)
-                probs = torch.sigmoid(logits)
+            # Mixed precision removed to avoid NaNs on real SRT data overflow
+            logits = self.model(batch)
+            probs = torch.sigmoid(logits)
             all_probs.append(probs.cpu().numpy())
 
         return np.concatenate(all_probs, axis=0).flatten()
+
 
     def run_cadence(
         self,
@@ -185,20 +194,29 @@ class InferenceEngine:
             - probability: P(ETI) from the model
             - classification: 'ETI' or 'RFI' based on threshold
         """
-        # 1. Extract overlapping snippets
+        # 1. Extract overlapping snippets (sample-wise normalization)
         snippets = self._extract_snippets(cadence)
         if not snippets:
             print("  ⚠️  No snippets extracted (input too narrow?)")
             return pd.DataFrame()
 
         centers = np.array([s[0] for s in snippets])
-        specs = np.array([s[1] for s in snippets])
-
+        
         print(f"  Extracted {len(snippets)} overlapping snippets "
               f"(step={self.sliding_step})")
 
-        # 2. Batch inference
-        probs = self._batch_inference(specs)
+        # 2. Batch inference (streaming to save RAM)
+        # Avoid creating specs = np.array(...) to save 50GB+ of RAM on large cadences
+        all_probs = []
+        # Process in chunks of 1024 snippets to keep memory low
+        chunk_size = 1024 
+        for i in tqdm(range(0, len(snippets), chunk_size), desc="    Batch Inference", leave=False):
+            chunk_snippets = snippets[i:i+chunk_size]
+            chunk_specs = np.array([s[1] for s in chunk_snippets])
+            probs_chunk = self._batch_inference(chunk_specs)
+            all_probs.append(probs_chunk)
+        
+        probs = np.concatenate(all_probs)
 
         # 3. Build results DataFrame
         results = pd.DataFrame({
@@ -219,6 +237,9 @@ class InferenceEngine:
         # Sort by probability descending
         results = results.sort_values('probability', ascending=False)
         results = results.reset_index(drop=True)
+
+        print("\n  Top detections:")
+        print(results[['center_channel', 'probability', 'classification']].head(5))
 
         n_eti = (results['classification'] == 'ETI').sum()
         n_attn = (results['probability'] >= self.attn_threshold).sum()
@@ -241,12 +262,11 @@ class InferenceEngine:
             center_channel: Center channel for the snippet.
 
         Returns:
-            Array of shape (96, 1024), normalized.
+            Array of shape (96, 1024), normalized (sample-wise).
         """
-        return preprocess_cadence(
+        spec = preprocess_cadence(
             cadence=cadence,
             center_channel=center_channel,
             snippet_width=self.snippet_width,
-            mean=self.norm_mean,
-            std=self.norm_std,
         )
+        return normalize_robust(spec)

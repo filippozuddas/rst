@@ -51,44 +51,35 @@ def stack_cadence(cadence: np.ndarray) -> np.ndarray:
     return cadence.reshape(-1, cadence.shape[-1])
 
 
-def normalize_zscore(
-    spectrogram: np.ndarray,
-    mean: float,
-    std: float,
-) -> np.ndarray:
+def normalize_robust(spec: np.ndarray) -> np.ndarray:
+    """Robust Hybrid Preprocessing for Neural Networks.
+
+    1. Log-Scaling: compresses the huge dynamic range of radio power.
+    2. Per-Observation Z-Score: zero-centers each of the 6 observations
+       independently to remove broadband gain differences (Stripe Bias).
+    3. Clip: removes extreme RFI peaks that survive normalization.
     """
-    Z-score normalization: (x - μ) / (σ × 2)
-    Factor of 2 follows the AST paper convention.
-    """
-    return (spectrogram - mean) / (std * 2)
+    # 1. Log-Scaling (prevent log(0) and NaNs)
+    spec = np.clip(spec, 1e-6, None)
+    spec = np.log10(spec)
 
+    # 2. Per-Observation Normalization (6 observations of 16 rows each)
+    for i in range(6):
+        obs = spec[i*16:(i+1)*16, :]
+        mu = obs.mean()
+        sigma = obs.std()
+        if sigma < 1e-9:          # guard against constant snippets
+            sigma = 1.0
+        spec[i*16:(i+1)*16, :] = (obs - mu) / (sigma * 2)
 
-def compute_dataset_stats(
-    spectrograms: np.ndarray,
-) -> Tuple[float, float]:
-    """
-    Compute the mean and standard deviation of the dataset.
-
-    These values should be computed ONCE on the training set
-    and then used to normalize train, val, and test sets.
-
-    Args:
-        spectrograms: Array of shape (N, 96, 1024) with N spectrograms.
-
-    Returns:
-        Tuple (mean, std).
-    """
-    mean = float(np.mean(spectrograms))
-    std = float(np.std(spectrograms))
-    return mean, std
+    # 3. Clip extreme outliers
+    return np.clip(spec, -5, 5)
 
 
 def preprocess_cadence(
     cadence: np.ndarray,
     center_channel: int,
     snippet_width: int = 1024,
-    mean: Optional[float] = None,
-    std: Optional[float] = None,
 ) -> np.ndarray:
     """
     Full pipeline: snippet extraction → stack → normalization.
@@ -97,8 +88,7 @@ def preprocess_cadence(
         cadence: Array (6, 16, n_freq) raw.
         center_channel: Center channel for the snippet.
         snippet_width: Snippet width (default 1024).
-        mean: Mean for normalization (if None, skip normalization).
-        std: Std for normalization (if None, skip normalization).
+        snippet_width: Snippet width (default 1024).
 
     Returns:
         Array (96, 1024) ready for the model, as float32.
@@ -109,8 +99,7 @@ def preprocess_cadence(
     # 2. Stack the 6 observations
     stacked = stack_cadence(snippet)
 
-    # 3. Normalize (if stats are available)
-    if mean is not None and std is not None:
-        stacked = normalize_zscore(stacked, mean, std)
+    # 3. Normalize using robust per-observation z-score
+    stacked = normalize_robust(stacked)
 
     return stacked.astype(np.float32)
