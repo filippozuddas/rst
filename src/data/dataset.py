@@ -62,17 +62,28 @@ class SETIDataset(Dataset):
 
     @staticmethod
     def _normalize_sample(spec: np.ndarray) -> np.ndarray:
-        """Sample-wise z-score: (x - μ_sample) / (σ_sample × 2).
+        """Robust Hybrid Preprocessing for Neural Networks.
 
-        Each spectrogram is standardised independently so that
-        narrowband signals are always visible regardless of the
-        global dynamic range of the dataset.
+        1. Log-Scaling: compresses the huge dynamic range of radio power.
+        2. Per-Observation Z-Score: zero-centers each of the 6 observations
+           independently to remove broadband gain differences (Stripe Bias).
+        3. Clip: removes extreme RFI peaks that survive normalization.
         """
-        mu = spec.mean()
-        sigma = spec.std()
-        if sigma < 1e-9:          # guard against constant snippets
-            sigma = 1.0
-        return (spec - mu) / (sigma * 2)
+        # 1. Log-Scaling (prevent log(0) and NaNs)
+        spec = np.clip(spec, 1e-6, None)
+        spec = np.log10(spec)
+
+        # 2. Per-Observation Normalization (6 observations of 16 rows each)
+        for i in range(6):
+            obs = spec[i*16:(i+1)*16, :]
+            mu = obs.mean()
+            sigma = obs.std()
+            if sigma < 1e-9:          # guard against constant snippets
+                sigma = 1.0
+            spec[i*16:(i+1)*16, :] = (obs - mu) / (sigma * 2)
+
+        # 3. Clip extreme outliers
+        return np.clip(spec, -5, 5)
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
