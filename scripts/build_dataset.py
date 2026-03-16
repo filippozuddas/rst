@@ -21,7 +21,7 @@ import os
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.data.cadence_generator import CadenceGenerator, CadenceParams
-from src.data.preprocessing import stack_cadence, compute_dataset_stats
+from src.data.preprocessing import stack_cadence
 
 
 def build_dataset(
@@ -133,10 +133,6 @@ def build_dataset(
     val_specs = spectrograms[n_train:]
     val_labels = labels[n_train:]
 
-    # Compute normalization stats on train set
-    mean, std = compute_dataset_stats(train_specs)
-    print(f"\n  Train stats: mean={mean:.4f}, std={std:.4f}")
-
     # Save
     train_path = output_dir / "train.npz"
     val_path = output_dir / "val.npz"
@@ -145,15 +141,11 @@ def build_dataset(
         train_path,
         spectrograms=train_specs,
         labels=train_labels,
-        mean=mean,
-        std=std,
     )
     np.savez_compressed(
         val_path,
         spectrograms=val_specs,
         labels=val_labels,
-        mean=mean,  # Use train stats for val
-        std=std,
     )
 
     # Save generation metadata
@@ -174,8 +166,6 @@ def build_dataset(
         'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating', 'pulsed'],
         'freq_profiles': ['gaussian', 'sinc2'],
         'time_profiles': ['constant', 'scintillating'],
-        'train_mean': mean,
-        'train_std': std,
         'backgrounds_path': str(backgrounds_path),
         'n_backgrounds': len(plate),
     }
@@ -189,7 +179,6 @@ def build_dataset(
     print(f"   Val:   {val_path} ({n_val} samples)")
     print(f"   Meta:  {meta_path}")
     print(f"   Shape: {train_specs.shape[1:]}")
-    print(f"   Stats: mean={mean:.4f}, std={std:.4f}")
     print(f"{'='*60}")
 
 
