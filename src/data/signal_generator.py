@@ -11,7 +11,7 @@ import numpy as np
 import setigen as stg
 from astropy import units as u
 from typing import Optional, Tuple, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 # Available RFI types for False sample generation
@@ -24,6 +24,27 @@ RFI_TYPES: List[str] = [
 
 # Default weights for weighted RFI type selection
 RFI_TYPE_WEIGHTS: List[float] = [0.40, 0.15, 0.25, 0.20]
+
+def compute_max_drift_rate(
+    snippet_width: int, df: float, dt: float, n_scans: int = 4, bins_per_scan: int = 16
+) -> float:
+    """
+    Calculate the maximum theoretical drift rate a signal can have before it
+    drifts completely out of the snippet window before n_scans have elapsed.
+
+    Args:
+        snippet_width: Width of the spectral window (in frequency bins).
+        df: Frequency resolution (Hz per bin).
+        dt: Time resolution (seconds per bin).
+        n_scans: Number of observations the signal must cross without exiting (e.g. 4 for ON-OFF-ON-OFF).
+        bins_per_scan: Number of time bins per observation.
+
+    Returns:
+        float: Maximum drift rate in Hz/s.
+    """
+    total_bandwidth_hz = snippet_width * df
+    total_time_s = n_scans * bins_per_scan * dt
+    return float(total_bandwidth_hz / total_time_s)
 
 
 @dataclass
@@ -38,12 +59,15 @@ class SignalParams:
     snr_max: float = 50.0
 
     # Signal width parameters (|DR|×dt + U(offset_min, offset_max) Hz)
-    # ETI signals are narrowband: intrinsic width ~2-15 Hz (~1-5 channels at 2.79 Hz/ch)
-    width_offset_min: float = 2.0    # Min offset above drift-induced width (Hz)
-    width_offset_max: float = 15.0   # Max offset above drift-induced width (Hz)
+    width_offset_min: float = 5.0    # Min offset above drift-induced width (Hz)
+    width_offset_max: float = 55.0   # Max offset above drift-induced width (Hz)
 
     # Drift rate parameters — log-uniform with random sign
-    max_drift_rate: float = 4.0      # Max drift rate in Hz/s
+    max_drift_rate: float = field(
+        default_factory=lambda: compute_max_drift_rate(
+            snippet_width=1024, df=2.7939677238464355, dt=18.25361108, n_scans=4
+        )
+    )
     min_nonzero_drift: float = 0.01  # Min non-zero drift rate for log sampling
     zero_drift_prob: float = 0.05    # Probability of exactly zero drift
 
@@ -55,14 +79,12 @@ class SignalParams:
     time_profiles: tuple = ('constant', 'scintillating')
     time_profile_weights: tuple = (0.6, 0.4)
 
-    # RFI width parameters — wideband, independent from ETI
-    rfi_width_min: float = 10.0      # Min RFI width (Hz)
-    rfi_width_max: float = 80.0      # Max RFI width (Hz)
-
     # RFI type weights
     rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating')
     rfi_type_weights: tuple = (0.40, 0.15, 0.25, 0.20)
 
+    # Legacy ML-SRT-SETI behavior
+    use_legacy_drift: bool = False   # If True, overrides log-uniform sampling with geometric corner-targeting
 
 class SignalGenerator:
     """
@@ -70,7 +92,14 @@ class SignalGenerator:
 
     Methods:
         inject_signal: ETI-like narrowband drifting signal (for True samples)
-        inject_rfi_signal: Differents RFI patterns (for False samples)
+        inject_rfi_signal: Diverse RFI patterns (for False samples)
+
+    Sampling strategies:
+        - SNR: log-uniform in [snr_min, snr_max] (more low-SNR samples)
+        - Drift rate: log-uniform in [min_nonzero, max] with random sign
+          (concentrates on low drift rates as seen in real candidates)
+        - Freq profile: weighted random (gaussian 80%, sinc² 20%)
+        - Time profile: weighted random (constant 60%, scintillating 40%)
     """
 
     def __init__(self, params: Optional[SignalParams] = None, seed: Optional[int] = None):
@@ -100,6 +129,14 @@ class SignalGenerator:
 
         Returns (drift_rate, true_slope) tuple.
         """
+        # --- ML-SRT-SETI Legacy Corner-Targeting Logic ---
+        if self.params.use_legacy_drift:
+            # We need to know where we start and total width to target opposite edges.
+            # Notice this breaks the signature a bit if start_channel/fchans are not passed here,
+            # so we handle it below in inject_signal where we have that context.
+            pass
+
+        # --- RST Log-Uniform Strategy ---
         if self.rng.random() < self.params.zero_drift_prob:
             drift_rate = 0.0
         else:
@@ -117,26 +154,38 @@ class SignalGenerator:
 
         return drift_rate, true_slope
 
+    def _calculate_legacy_drift_rate(self, start_channel: int, fchans: int, tchans: int) -> Tuple[float, float]:
+        """ML-SRT-SETI logic: Calculate drift rate to traverse the entire observation from corner to opposite edge."""
+        direction = self.rng.choice([-1, 1])
+
+        if direction > 0:
+            # Positive drift: signal drifts from lower to higher frequencies
+            true_slope = tchans / start_channel if start_channel > 0 else 1e9
+        else:
+            # Negative drift: signal drifts from higher to lower frequencies
+            # fchans is equivalent to width in the old code
+            denominator = start_channel - fchans
+            true_slope = tchans / denominator if denominator != 0 else 1e9
+
+        # Add small random perturbation for variety
+        slope = true_slope * (self.params.dt / self.params.df) + self.rng.uniform(0, 3) * direction
+
+        if abs(slope) < 1e-9:
+            drift_rate = self.params.max_drift_rate * direction # Cap it physically
+        else:
+            drift_rate = -1.0 / slope
+
+        return drift_rate, true_slope
+
     def _calculate_width(self, drift_rate: float) -> float:
-        """ETI narrowband width: |DR|×dt + U(offset_min, offset_max).
+        """Width formula: |DR|×dt + U(offset_min, offset_max).
 
         The |DR|×dt term compensates for the drift within a single time bin,
-        and the random offset adds a small intrinsic width (~1-5 channels).
+        and the random offset prevents quantization artefacts.
         """
         drift_component = abs(drift_rate) * self.params.dt
         offset = self.rng.uniform(self.params.width_offset_min,
                                   self.params.width_offset_max)
-        return drift_component + offset
-
-    def _calculate_rfi_width(self, drift_rate: float) -> float:
-        """RFI wideband width: |DR|×dt + U(rfi_width_min, rfi_width_max).
-
-        RFI signals are typically wider than ETI (terrestrial interference,
-        satellites, etc.). Uses a separate, broader width range.
-        """
-        drift_component = abs(drift_rate) * self.params.dt
-        offset = self.rng.uniform(self.params.rfi_width_min,
-                                  self.params.rfi_width_max)
         return drift_component + offset
 
     def _select_f_profile(self, width: float):
@@ -209,7 +258,11 @@ class SignalGenerator:
         if start_channel is None:
             start_channel = self.rng.integers(1, fchans - 1)
 
-        drift_rate, true_slope = self._sample_drift_rate()
+        if self.params.use_legacy_drift:
+            drift_rate, true_slope = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+        else:
+            drift_rate, true_slope = self._sample_drift_rate()
+
         width = self._calculate_width(drift_rate)
 
         # Intercept for tracking
@@ -288,19 +341,22 @@ class SignalGenerator:
 
         # Build path, t_profile, f_profile based on RFI type
         if rfi_type == 'linear':
-            # Similar path to ETI but wider and injected in ALL obs
-            drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_rfi_width(drift_rate)
+            # Same as ETI but will be injected in ALL obs (not just ON)
+            if self.params.use_legacy_drift:
+                drift_rate, _ = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+            else:
+                drift_rate, _ = self._sample_drift_rate()
+            width = self._calculate_width(drift_rate)
             path = stg.constant_path(f_start=f_start,
                                      drift_rate=drift_rate * u.Hz / u.s)
             t_prof = stg.constant_t_profile(level=intensity)
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
 
         elif rfi_type == 'stationary':
-            # RFI fixed in frequency with small jitter — like a terrestrial carrier
-            spread = self.rng.uniform(30, 300) * u.Hz
-            drift_rate = self.rng.uniform(-0.5, 0.5)
-            width = self._calculate_rfi_width(drift_rate)
+            # RFI fixed in frequency with random jitter around center
+            spread = self.rng.uniform(50, 500) * u.Hz
+            drift_rate = self.rng.uniform(-0.1, 0.1)
+            width = self.rng.uniform(10, 80) * u.Hz
             path = stg.simple_rfi_path(f_start=f_start,
                                        drift_rate=drift_rate * u.Hz / u.s,
                                        spread=spread,
@@ -313,7 +369,7 @@ class SignalGenerator:
             # RFI that wanders in frequency over time
             spread = self.rng.uniform(30, 300) * u.Hz
             drift_rate = self.rng.uniform(-0.5, 0.5)
-            width = self._calculate_rfi_width(drift_rate)
+            width = self._calculate_width(drift_rate)
             path = stg.simple_rfi_path(f_start=f_start,
                                        drift_rate=drift_rate * u.Hz / u.s,
                                        spread=spread,
@@ -324,8 +380,11 @@ class SignalGenerator:
 
         elif rfi_type == 'scintillating':
             # Intensity oscillates sinusoidally over time
-            drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_rfi_width(drift_rate)
+            if self.params.use_legacy_drift:
+                drift_rate, _ = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+            else:
+                drift_rate, _ = self._sample_drift_rate()
+            width = self._calculate_width(drift_rate)
             period = self.rng.uniform(50, 300) * u.s
             amplitude = intensity * self.rng.uniform(0.3, 0.8)
             path = stg.constant_path(f_start=f_start,
