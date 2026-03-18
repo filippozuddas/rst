@@ -85,9 +85,10 @@ def build_dataset(
 
     # Generate samples
     total = n_true + n_false
+    max_drift = gen.signal_gen.params.max_drift_rate
     print(f"\n  Configuration:")
     print(f"    SNR: log-uniform [{snr_min}, {snr_max}]")
-    print(f"    Drift rate: log-uniform ±4 Hz/s")
+    print(f"    Drift rate: log-uniform ±{max_drift:.2f} Hz/s")
     print(f"    True samples: {int(eti_only_fraction*100)}% ETI-only, "
           f"{int((1-eti_only_fraction)*100)}% ETI+RFI")
     print(f"    False samples: {int(rfi_fraction*100)}% RFI, "
@@ -160,10 +161,10 @@ def build_dataset(
         'snr_max': snr_max,
         'snr_distribution': 'log_uniform',
         'drift_rate_distribution': 'log_uniform',
-        'drift_rate_max': 4.0,
+        'drift_rate_max': max_drift,
         'eti_only_fraction': eti_only_fraction,
         'rfi_fraction': rfi_fraction,
-        'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating', 'pulsed'],
+        'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating'],
         'freq_profiles': ['gaussian', 'sinc2'],
         'time_profiles': ['constant', 'scintillating'],
         'backgrounds_path': str(backgrounds_path),
