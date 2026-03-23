@@ -7,11 +7,12 @@ Extracts and visualizes self-attention maps from the trained Transformer model.
 Shows which parts of the spectrogram the model "focuses" on when classifying.
 
 Usage:
-    python scripts/visualize_attention.py --model checkpoints/best_model.pth --data data/processed/val.npz --index 0
+    python scripts/visualize_attention.py --model checkpoints/best_model.pth --data data/processed/val.npz --num_plots 5
 """
 
 import sys
 import os
+import random
 import argparse
 import yaml
 import numpy as np
@@ -159,7 +160,7 @@ def main():
     parser.add_argument('--config', '-c', type=str, default='configs/default.yaml')
     parser.add_argument('--model', '-m', type=str, required=True)
     parser.add_argument('--data', '-d', type=str, required=True)
-    parser.add_argument('--index', '-i', type=int, default=0, help="Index of the sample in the .npz")
+    parser.add_argument('--num_plots', '-n', type=int, default=1, help="Number of random samples to visualize")
     parser.add_argument('--gpu', type=str, default='0')
     parser.add_argument('--output', '-o', type=str, default='attention_map.png')
 
@@ -191,27 +192,48 @@ def main():
 
     # Load Data
     dataset = SETIDataset(args.data, is_training=False)
-    spec_tensor, label_tensor = dataset[args.index]
-    label_str = "TRUE (ETI)" if label_tensor.item() > 0.5 else "FALSE (RFI)"
-    
-    # Extract Attention
-    extractor = AttentionExtractor(model)
-    with torch.no_grad():
-        _, attn_weights = extractor.get_attention(spec_tensor.unsqueeze(0).to(device))
-    
-    # attn_weights shape: (1, num_heads, 386, 386)
-    # 386 = [CLS] + [DIST] + 384 patches
-    # We want attention of [CLS] (index 0) over the patches (indices 2 to 386)
-    # Average across all heads
-    avg_attn = attn_weights[0].mean(dim=0) # (386, 386)
-    cls_attn = avg_attn[0, 2:].cpu().numpy() # (384,)
-    
-    # Normalize for visualization
-    cls_attn = (cls_attn - cls_attn.min()) / (cls_attn.max() - cls_attn.min() + 1e-8)
 
-    # Visualize
-    spec_np = spec_tensor.numpy()
-    visualize_attention(spec_np, cls_attn, label_str, output_path=args.output)
+    # Randomly sample indices
+    num_samples = len(dataset)
+    num_plots = min(args.num_plots, num_samples)
+    indices = random.sample(range(num_samples), num_plots)
+    print(f"📊 Generating {num_plots} attention maps from {num_samples} samples...")
+    print(f"   Selected indices: {indices}")
+
+    # Prepare output path
+    out_base, out_ext = os.path.splitext(args.output)
+
+    extractor = AttentionExtractor(model)
+
+    for i, idx in enumerate(indices):
+        spec_tensor, label_tensor = dataset[idx]
+        label_str = "TRUE (ETI)" if label_tensor.item() > 0.5 else "FALSE (RFI)"
+
+        # Extract Attention
+        with torch.no_grad():
+            _, attn_weights = extractor.get_attention(spec_tensor.unsqueeze(0).to(device))
+
+        # attn_weights shape: (1, num_heads, 386, 386)
+        # 386 = [CLS] + [DIST] + 384 patches
+        # We want attention of [CLS] (index 0) over the patches (indices 2 to 386)
+        # Average across all heads
+        avg_attn = attn_weights[0].mean(dim=0)  # (386, 386)
+        cls_attn = avg_attn[0, 2:].cpu().numpy()  # (384,)
+
+        # Normalize for visualization
+        cls_attn = (cls_attn - cls_attn.min()) / (cls_attn.max() - cls_attn.min() + 1e-8)
+
+        # Output path: attention_map_0.png, attention_map_1.png, ...
+        if num_plots == 1:
+            out_path = args.output
+        else:
+            out_path = f"{out_base}_{i}{out_ext}"
+
+        # Visualize
+        spec_np = spec_tensor.numpy()
+        visualize_attention(spec_np, cls_attn, f"{label_str} [idx={idx}]", output_path=out_path)
+
+    print(f"\n✅ Done! Generated {num_plots} attention map(s).")
 
 
 if __name__ == '__main__':
