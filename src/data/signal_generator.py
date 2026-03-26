@@ -237,6 +237,10 @@ class SignalGenerator:
             data=data
         )
 
+    # Minimum time bin the signal must still be in-bounds at (end of ON₂).
+    # This guarantees the signal is visible in at least 2 of 3 ON windows.
+    _MIN_VISIBLE_BIN = 47
+
     # ETI signal injection (used for True samples)
     def inject_signal(self,
                       data: np.ndarray,
@@ -248,6 +252,10 @@ class SignalGenerator:
         Uses log-uniform SNR and drift rate sampling, with random
         frequency and temporal profile selection.
 
+        The start_channel is automatically constrained so that the signal
+        remains within the snippet through at least ON₂ (time bin 47),
+        ensuring visibility in at least 2 of 3 ON windows.
+
         Returns (injected data, signal parameters dict).
         """
         tchans, fchans = data.shape
@@ -255,13 +263,34 @@ class SignalGenerator:
         if snr is None:
             snr = self._sample_snr()
 
-        if start_channel is None:
-            start_channel = self.rng.integers(1, fchans - 1)
-
-        if self.params.use_legacy_drift:
-            drift_rate, true_slope = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+        # When start_channel is given explicitly, use legacy flow unchanged
+        if start_channel is not None:
+            if self.params.use_legacy_drift:
+                drift_rate, true_slope = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+            else:
+                drift_rate, true_slope = self._sample_drift_rate()
         else:
-            drift_rate, true_slope = self._sample_drift_rate()
+            # Sample drift rate FIRST, then constrain start_channel
+            if self.params.use_legacy_drift:
+                # Legacy mode needs start_channel first — pick freely, then compute drift
+                start_channel = self.rng.integers(1, fchans - 1)
+                drift_rate, true_slope = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
+            else:
+                drift_rate, true_slope = self._sample_drift_rate()
+
+                # Compute how many channels the signal drifts through ON₂
+                drift_channels = abs(drift_rate) / self.params.df * self._MIN_VISIBLE_BIN * self.params.dt
+
+                if drift_rate > 0:
+                    # Drifts right → start must leave room on the right
+                    max_start = max(1, int(fchans - 1 - drift_channels))
+                    start_channel = int(self.rng.integers(1, max_start + 1))
+                elif drift_rate < 0:
+                    # Drifts left → start must leave room on the left
+                    min_start = min(fchans - 2, int(drift_channels + 1))
+                    start_channel = int(self.rng.integers(min_start, fchans - 1))
+                else:
+                    start_channel = int(self.rng.integers(1, fchans - 1))
 
         width = self._calculate_width(drift_rate)
 
