@@ -115,8 +115,7 @@ class InferenceEngine:
                 cadence=cadence,
                 center_channel=center,
                 snippet_width=self.snippet_width,
-            )  # returns raw stacked float32
-            spec = normalize_robust(spec)
+            )
             snippets.append((center, spec))
             center += self.sliding_step
 
@@ -127,7 +126,6 @@ class InferenceEngine:
                 center_channel=end_center,
                 snippet_width=self.snippet_width,
             )
-            spec = normalize_robust(spec)
             snippets.append((end_center, spec))
 
         return snippets
@@ -269,4 +267,4 @@ class InferenceEngine:
             center_channel=center_channel,
             snippet_width=self.snippet_width,
         )
-        return normalize_robust(spec)
+        return spec
