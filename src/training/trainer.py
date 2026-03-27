@@ -127,11 +127,16 @@ def train(
         # Cosine Annealing: LR decays smoothly from `lr` to `eta_min`
         # over the phase's epochs. Helps the model "land" on the minimum
         # instead of oscillating around it.
-        eta_min = config.get('eta_min', 1e-7)
+        """eta_min = config.get('eta_min', 1e-7)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer, T_max=epochs, eta_min=eta_min,
         )
-        print(f'  Scheduler: CosineAnnealingLR (eta_min={eta_min})')
+        print(f'  Scheduler: CosineAnnealingLR (eta_min={eta_min})')"""
+
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+          optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-7, verbose=True
+        )
+        print(f"  Scheduler: ReduceLROnPlateau")
 
         # ============= EPOCH LOOP ============= #
         for epoch in range(epochs):
@@ -150,7 +155,7 @@ def train(
             )
 
             # Step the scheduler (after optimizer.step in _train_one_epoch)
-            scheduler.step()
+            scheduler.step(val_loss)
 
             # Save to history
             history['train_loss'].append(train_loss)
