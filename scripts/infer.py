@@ -98,6 +98,7 @@ def process_cadence(
     threshold: float,
     attn_threshold: float,
     generate_plots: bool,
+    top_n: int = 200,
 ) -> pd.DataFrame:
     """
     Process a single cadence: inference + plots + attention maps.
@@ -121,16 +122,21 @@ def process_cadence(
     if not generate_plots:
         return results
 
-    # 3. Generate plots for ETI candidates (p >= threshold)
+    # 3. Generate plots for top-N ETI candidates (p >= threshold)
     eti_candidates = results[results['probability'] >= threshold]
 
-    if len(eti_candidates) > 0:
-        print(f"  🎨 Generating {len(eti_candidates)} candidate plot(s)...")
+    if len(eti_candidates) > 0 and top_n > 0:
+        # Already sorted by probability descending, take top N
+        to_plot = eti_candidates.head(top_n)
+        skipped = len(eti_candidates) - len(to_plot)
+        skip_msg = f" (skipped {skipped})" if skipped > 0 else ""
+        print(f"    Generating {len(to_plot)} candidate plot(s)"
+              f"{skip_msg}...")
         plots_dir = output_dir / "plots"
         plots_dir.mkdir(parents=True, exist_ok=True)
 
-        for _, row in tqdm(eti_candidates.iterrows(),
-                           total=len(eti_candidates),
+        for _, row in tqdm(to_plot.iterrows(),
+                           total=len(to_plot),
                            desc="    Plots", leave=False):
             center = int(row['center_channel'])
             prob = row['probability']
@@ -149,15 +155,16 @@ def process_cadence(
     # 4. Generate attention maps for high-confidence candidates (p >= attn_threshold)
     high_conf = results[results['probability'] >= attn_threshold]
 
-    if len(high_conf) > 0:
-        print(f"  🧠 Generating {len(high_conf)} attention map(s)...")
+    if len(high_conf) > 0 and top_n > 0:
+        to_attn = high_conf.head(top_n)
+        print(f"    Generating {len(to_attn)} attention map(s)...")
         attn_dir = output_dir / "attention_maps"
         attn_dir.mkdir(parents=True, exist_ok=True)
 
         extractor = AttentionExtractor(engine.model)
 
-        for _, row in tqdm(high_conf.iterrows(),
-                           total=len(high_conf),
+        for _, row in tqdm(to_attn.iterrows(),
+                           total=len(to_attn),
                            desc="    Attention", leave=False):
             center = int(row['center_channel'])
             prob = row['probability']
@@ -226,6 +233,8 @@ Examples:
                         help='Frequency band filter for --scan mode')
     parser.add_argument('--no_plots', action='store_true',
                         help='Disable plot generation')
+    parser.add_argument('--top_n', '-n', type=int, default=200,
+                        help='Max plots per cadence (default: 200, 0=all)')
 
     args = parser.parse_args()
 
@@ -280,6 +289,7 @@ Examples:
             threshold=threshold,
             attn_threshold=attn_threshold,
             generate_plots=not args.no_plots,
+            top_n=args.top_n,
         )
         if not results.empty:
             results['target'] = target
@@ -333,6 +343,7 @@ Examples:
                     threshold=threshold,
                     attn_threshold=attn_threshold,
                     generate_plots=not args.no_plots,
+                    top_n=args.top_n,
                 )
 
                 if not results.empty:
