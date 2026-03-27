@@ -108,7 +108,7 @@ def plot_candidate(
     """
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 
-    im = ax.imshow(spec, aspect='auto', cmap='inferno', origin='upper')
+    im = ax.imshow(spec, aspect='auto', cmap='viridis', origin='upper')
 
     # Title with probability and frequency
     freq_str = f" — {freq_mhz:.2f} MHz" if freq_mhz > 0 else ""
