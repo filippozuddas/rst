@@ -24,6 +24,7 @@ import pandas as pd
 import torch
 from pathlib import Path
 from tqdm import tqdm
+from typing import Tuple
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -99,38 +100,40 @@ def process_cadence(
     attn_threshold: float,
     generate_plots: bool,
     top_n: int = 200,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Process a single cadence: inference + plots + attention maps.
+    Process a single cadence: inference + clustering + plots + attention maps.
 
     Returns:
-        DataFrame with per-snippet results.
+        Tuple of (raw_results DataFrame, clusters DataFrame).
     """
-    # 1. Run inference
-    results = engine.run_cadence(
+    # 1. Run inference + clustering
+    results, clusters = engine.run_cadence(
         cadence, freq_start_mhz, freq_resolution_mhz,
     )
 
     if results.empty:
-        return results
+        return results, clusters
 
-    # 2. Save per-cadence CSV
+    # 2. Save CSVs (raw + clustered)
     csv_path = output_dir / "cadence_results.csv"
     results.to_csv(csv_path, index=False, float_format='%.6f')
     print(f"  📄 Saved: {csv_path}")
 
+    if not clusters.empty:
+        cluster_csv = output_dir / "cadence_clusters.csv"
+        clusters.to_csv(cluster_csv, index=False, float_format='%.6f')
+        print(f"  📄 Saved: {cluster_csv}")
+
     if not generate_plots:
-        return results
+        return results, clusters
 
-    # 3. Generate plots for top-N ETI candidates (p >= threshold)
-    eti_candidates = results[results['probability'] >= threshold]
-
-    if len(eti_candidates) > 0 and top_n > 0:
-        # Already sorted by probability descending, take top N
-        to_plot = eti_candidates.head(top_n)
-        skipped = len(eti_candidates) - len(to_plot)
+    # 3. Generate plots for top-N clusters (peak snippet of each cluster)
+    if not clusters.empty and top_n > 0:
+        to_plot = clusters.head(top_n)
+        skipped = len(clusters) - len(to_plot)
         skip_msg = f" (skipped {skipped})" if skipped > 0 else ""
-        print(f"    Generating {len(to_plot)} candidate plot(s)"
+        print(f"  🎨 Generating {len(to_plot)} cluster plot(s)"
               f"{skip_msg}...")
         plots_dir = output_dir / "plots"
         plots_dir.mkdir(parents=True, exist_ok=True)
@@ -139,53 +142,55 @@ def process_cadence(
                            total=len(to_plot),
                            desc="    Plots", leave=False):
             center = int(row['center_channel'])
-            prob = row['probability']
+            prob = row['peak_probability']
             freq = row['freq_mhz']
+            n_snip = int(row['n_snippets'])
 
             spec = engine.get_snippet_spectrogram(cadence, center)
 
             freq_str = f"{freq:.2f}MHz" if freq > 0 else "nofreq"
-            fname = f"snippet_ch{center:05d}_{freq_str}_p{prob:.2f}.png"
+            fname = f"cluster_ch{center:05d}_{freq_str}_p{prob:.2f}_n{n_snip}.png"
 
             plot_candidate(
                 spec=spec, prob=prob, center_channel=center,
                 freq_mhz=freq, output_path=str(plots_dir / fname),
             )
 
-    # 4. Generate attention maps for high-confidence candidates (p >= attn_threshold)
-    high_conf = results[results['probability'] >= attn_threshold]
-
-    if len(high_conf) > 0 and top_n > 0:
+    # 4. Generate attention maps for high-confidence clusters (peak_prob >= attn_threshold)
+    if not clusters.empty and top_n > 0:
+        high_conf = clusters[clusters['peak_probability'] >= attn_threshold]
         to_attn = high_conf.head(top_n)
-        print(f"    Generating {len(to_attn)} attention map(s)...")
-        attn_dir = output_dir / "attention_maps"
-        attn_dir.mkdir(parents=True, exist_ok=True)
 
-        extractor = AttentionExtractor(engine.model)
+        if len(to_attn) > 0:
+            print(f"  🧠 Generating {len(to_attn)} attention map(s)...")
+            attn_dir = output_dir / "attention_maps"
+            attn_dir.mkdir(parents=True, exist_ok=True)
 
-        for _, row in tqdm(to_attn.iterrows(),
-                           total=len(to_attn),
-                           desc="    Attention", leave=False):
-            center = int(row['center_channel'])
-            prob = row['probability']
-            freq = row['freq_mhz']
+            extractor = AttentionExtractor(engine.model)
 
-            spec = engine.get_snippet_spectrogram(cadence, center)
-            spec_tensor = torch.from_numpy(spec).unsqueeze(0).to(engine.device)
+            for _, row in tqdm(to_attn.iterrows(),
+                               total=len(to_attn),
+                               desc="    Attention", leave=False):
+                center = int(row['center_channel'])
+                prob = row['peak_probability']
+                freq = row['freq_mhz']
 
-            attn_weights = extractor.get_attention(spec_tensor)
+                spec = engine.get_snippet_spectrogram(cadence, center)
+                spec_tensor = torch.from_numpy(spec).unsqueeze(0).to(engine.device)
 
-            freq_str = f"{freq:.2f}MHz" if freq > 0 else "nofreq"
-            fname = (f"snippet_ch{center:05d}_{freq_str}"
-                     f"_p{prob:.2f}_attn.png")
+                attn_weights = extractor.get_attention(spec_tensor)
 
-            plot_attention_map(
-                spec=spec, attn_weights=attn_weights,
-                prob=prob, center_channel=center,
-                freq_mhz=freq, output_path=str(attn_dir / fname),
-            )
+                freq_str = f"{freq:.2f}MHz" if freq > 0 else "nofreq"
+                fname = (f"cluster_ch{center:05d}_{freq_str}"
+                         f"_p{prob:.2f}_attn.png")
 
-    return results
+                plot_attention_map(
+                    spec=spec, attn_weights=attn_weights,
+                    prob=prob, center_channel=center,
+                    freq_mhz=freq, output_path=str(attn_dir / fname),
+                )
+
+    return results, clusters
 
 
 def main():
@@ -267,6 +272,7 @@ Examples:
     attn_threshold = engine.attn_threshold
 
     all_results = []
+    all_clusters = []
 
     # ------------------------------------------------------------------ #
     #  Mode 1: Single cadence from 6 files
@@ -280,7 +286,7 @@ Examples:
         cadence_dir = output_dir / target
         cadence_dir.mkdir(parents=True, exist_ok=True)
 
-        results = process_cadence(
+        results, clusters = process_cadence(
             engine=engine, cadence=cadence,
             freq_start_mhz=freq_start,
             freq_resolution_mhz=freq_res,
@@ -294,6 +300,9 @@ Examples:
         if not results.empty:
             results['target'] = target
             all_results.append(results)
+        if not clusters.empty:
+            clusters['target'] = target
+            all_clusters.append(clusters)
 
     # ------------------------------------------------------------------ #
     #  Mode 2: Directory scan
@@ -334,7 +343,7 @@ Examples:
                 cadence_dir = output_dir / f"{target}_{cadence_info.date}"
                 cadence_dir.mkdir(parents=True, exist_ok=True)
 
-                results = process_cadence(
+                results, clusters = process_cadence(
                     engine=engine, cadence=cadence,
                     freq_start_mhz=freq_start,
                     freq_resolution_mhz=freq_res,
@@ -351,6 +360,11 @@ Examples:
                     results['date'] = cadence_info.date
                     results['freq_band'] = cadence_info.freq_band
                     all_results.append(results)
+                if not clusters.empty:
+                    clusters['target'] = target
+                    clusters['date'] = cadence_info.date
+                    clusters['freq_band'] = cadence_info.freq_band
+                    all_clusters.append(clusters)
 
             except Exception as e:
                 print(f"  ❌ Error: {e}")
@@ -366,15 +380,27 @@ Examples:
 
         n_total = len(summary)
         n_eti = (summary['classification'] == 'ETI').sum()
-        n_high = (summary['probability'] >= attn_threshold).sum()
+
+        # Save cluster summary
+        n_clusters = 0
+        n_high_clusters = 0
+        if all_clusters:
+            cluster_summary = pd.concat(all_clusters, ignore_index=True)
+            cluster_path = output_dir / "clusters_summary.csv"
+            cluster_summary.to_csv(cluster_path, index=False, float_format='%.6f')
+            n_clusters = len(cluster_summary)
+            n_high_clusters = (cluster_summary['peak_probability'] >= attn_threshold).sum()
 
         print(f"\n{'=' * 60}")
         print(f"  INFERENCE COMPLETE")
         print(f"{'=' * 60}")
         print(f"  Total snippets analyzed: {n_total:,}")
-        print(f"  ETI candidates (p≥{threshold}): {n_eti:,}")
-        print(f"  High-confidence (p≥{attn_threshold}): {n_high:,}")
+        print(f"  ETI snippets (p≥{threshold}): {n_eti:,}")
+        print(f"  Distinct signals (clusters): {n_clusters:,}")
+        print(f"  High-confidence clusters (p≥{attn_threshold}): {n_high_clusters:,}")
         print(f"  📄 Summary: {summary_path}")
+        if all_clusters:
+            print(f"  📄 Clusters: {cluster_path}")
         print(f"  📁 Output:  {output_dir}/")
     else:
         print("\n⚠️  No results generated.")
