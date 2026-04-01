@@ -15,15 +15,39 @@ Both modes include:
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
+import os
+import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from torch.utils.data import DataLoader
 
 # Mixed precision:
 # autocast() runs computations in FP16 (half memory)
 # GradScaler() prevents gradients from "vanishing" with FP16
 from torch.amp import autocast, GradScaler
+
+
+class FocalLoss(nn.Module):
+    """
+    Focal Loss for binary classification.
+    Focuses training on hard examples by down-weighting well-classified ones.
+    
+    FL(p) = -alpha * (1-p)^gamma * log(p)
+    """
+    def __init__(self, gamma: float = 2.0, alpha: float = 0.75):
+        super().__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        bce = F.binary_cross_entropy_with_logits(logits, targets, reduction='none')
+        probs = torch.sigmoid(logits)
+        p_t = probs * targets + (1 - probs) * (1 - targets)
+        alpha_t = self.alpha * targets + (1 - self.alpha) * (1 - targets)
+        focal_weight = alpha_t * (1 - p_t) ** self.gamma
+        return (focal_weight * bce).mean()
 
 
 def train(
@@ -48,10 +72,16 @@ def train(
     mode = config.get('mode', 'full')
     gradient_clip = config.get('gradient_clip', 1.0)
 
-    # Loss function: BCEWithLogitsLoss
-    # Combines sigmoid + binary cross-entropy in a single step.
-    # Numerically more stable than sigmoid() + BCELoss() separately.
-    loss_fn = nn.BCEWithLogitsLoss()
+    # Loss function configuration
+    use_focal = config.get('focal_loss', False)
+    if use_focal:
+        gamma = config.get('focal_gamma', 2.0)
+        alpha = config.get('focal_alpha', 0.75)
+        loss_fn = FocalLoss(gamma=gamma, alpha=alpha)
+        print(f"Loss Function: FocalLoss (gamma={gamma}, alpha={alpha})")
+    else:
+        loss_fn = nn.BCEWithLogitsLoss()
+        print("Loss Function: BCEWithLogitsLoss")
 
     # Mixed precision scaler
     scaler = GradScaler()
@@ -67,6 +97,7 @@ def train(
         'phase': [],
     }
 
+    # Initialize best Val F1 to 0
     best_val_f1 = -1.0
     global_epoch = 0
 
@@ -124,19 +155,12 @@ def train(
             betas=(0.95, 0.999),     # Same as the AST paper
         )
 
-        # Cosine Annealing: LR decays smoothly from `lr` to `eta_min`
-        # over the phase's epochs. Helps the model "land" on the minimum
-        # instead of oscillating around it.
-        """eta_min = config.get('eta_min', 1e-7)
+        # CosineAnnealingLR: smoothly decreases LR following a cosine curve
+        min_lr = config.get('eta_min', 1e-7)
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=epochs, eta_min=eta_min,
+            optimizer, T_max=epochs, eta_min=min_lr
         )
-        print(f'  Scheduler: CosineAnnealingLR (eta_min={eta_min})')"""
-
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-          optimizer, mode="min", factor=0.5, patience=3, min_lr=1e-7, verbose=True
-        )
-        print(f"  Scheduler: ReduceLROnPlateau")
+        print(f'  Scheduler: CosineAnnealingLR (T_max={epochs}, eta_min={min_lr})')
 
         # ============= EPOCH LOOP ============= #
         for epoch in range(epochs):
@@ -154,8 +178,8 @@ def train(
                 model, val_loader, loss_fn, device,
             )
 
-            # Step the scheduler (after optimizer.step in _train_one_epoch)
-            scheduler.step(val_loss)
+            # Step the scheduler (Cosine doesn't need val_loss)
+            scheduler.step()
 
             # Save to history
             history['train_loss'].append(train_loss)
