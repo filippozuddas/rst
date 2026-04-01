@@ -435,28 +435,3 @@ class SignalGenerator:
         }
 
         return frame.data, signal_info
-
-
-def check_intersection(m1: float, m2: float, b1: float, b2: float,
-                       num_observations: int = 6,
-                       tchans: int = 16) -> bool:
-    """
-    Check if two signal paths intersect within observation windows.
-    Returns True if signals DON'T intersect.
-    """
-    if m1 == m2:
-        return True  # Parallel lines
-
-    x = (b2 - b1) / (m1 - m2)
-    y = m1 * x + b1
-
-    # ON windows: 0-16, 32-48, 64-80
-    # OFF windows: 16-32, 48-64, 80-96
-    on_windows = [(0, 16), (32, 48), (64, 80)]
-    off_windows = [(16, 32), (48, 64), (80, 96)]
-
-    for start, end in on_windows + off_windows:
-        if start <= y <= end:
-            return False
-
-    return True

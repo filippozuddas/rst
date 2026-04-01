@@ -12,7 +12,7 @@ import setigen as stg
 from astropy import units as u
 from typing import Optional, Tuple, Union
 from dataclasses import dataclass
-from .signal_generator import SignalGenerator, SignalParams, check_intersection
+from .signal_generator import SignalGenerator, SignalParams
 
 
 @dataclass
