@@ -16,7 +16,7 @@ from tqdm import tqdm
 from typing import List, Tuple, Optional
 
 from src.models.rst_model import RSTModel
-from src.data.preprocessing import preprocess_cadence, normalize_robust
+from src.data.preprocessing import preprocess_cadence
 
 
 class InferenceEngine:
@@ -171,12 +171,82 @@ class InferenceEngine:
         return np.concatenate(all_probs, axis=0).flatten()
 
 
+    def cluster_detections(
+        self,
+        results: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """
+        Group adjacent ETI snippet detections into distinct signal clusters.
+
+        Two snippets belong to the same cluster if their center_channels
+        differ by at most `sliding_step` (i.e. they are adjacent in the
+        sliding window grid).  A snippet below threshold breaks the chain.
+
+        Args:
+            results: Raw per-snippet DataFrame from run_cadence.
+
+        Returns:
+            DataFrame with one row per cluster, sorted by peak_probability
+            descending.  Columns:
+            - center_channel: channel of the peak-probability snippet
+            - peak_probability: max P(ETI) in the cluster
+            - mean_probability: mean P(ETI) across cluster snippets
+            - cluster_width: (last - first center_channel) + snippet_width
+            - n_snippets: number of snippets in the cluster
+            - freq_mhz: frequency at the peak channel (0 if unavailable)
+        """
+        # Keep only above-threshold snippets, sorted by position
+        eti = results[results['classification'] == 'ETI'].copy()
+        if eti.empty:
+            return pd.DataFrame(columns=[
+                'center_channel', 'peak_probability', 'mean_probability',
+                'cluster_width', 'n_snippets', 'freq_mhz',
+            ])
+
+        eti = eti.sort_values('center_channel').reset_index(drop=True)
+
+        # Connected-component grouping on the 1D grid
+        clusters = []
+        cluster_start = 0
+
+        for i in range(1, len(eti)):
+            gap = eti.loc[i, 'center_channel'] - eti.loc[i - 1, 'center_channel']
+            if gap > self.sliding_step:
+                clusters.append((cluster_start, i - 1))
+                cluster_start = i
+        clusters.append((cluster_start, len(eti) - 1))  # last cluster
+
+        # Aggregate per cluster
+        rows = []
+        for start_idx, end_idx in clusters:
+            chunk = eti.iloc[start_idx:end_idx + 1]
+            peak_idx = chunk['probability'].idxmax()
+            rows.append({
+                'center_channel': int(chunk.loc[peak_idx, 'center_channel']),
+                'peak_probability': float(chunk['probability'].max()),
+                'mean_probability': float(chunk['probability'].mean()),
+                'cluster_width': int(
+                    chunk['center_channel'].iloc[-1]
+                    - chunk['center_channel'].iloc[0]
+                    + self.snippet_width
+                ),
+                'n_snippets': len(chunk),
+                'freq_mhz': float(chunk.loc[peak_idx, 'freq_mhz']),
+            })
+
+        cluster_df = pd.DataFrame(rows)
+        cluster_df = cluster_df.sort_values(
+            'peak_probability', ascending=False,
+        ).reset_index(drop=True)
+
+        return cluster_df
+
     def run_cadence(
         self,
         cadence: np.ndarray,
         freq_start_mhz: float = 0.0,
         freq_resolution_mhz: float = 0.0,
-    ) -> pd.DataFrame:
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
         Run inference on a single cadence.
 
@@ -186,17 +256,18 @@ class InferenceEngine:
             freq_resolution_mhz: Channel width in MHz (from HDF5 header).
 
         Returns:
-            DataFrame with columns:
-            - center_channel: Center channel index of each snippet
-            - freq_mhz: Center frequency in MHz (if freq info available)
-            - probability: P(ETI) from the model
-            - classification: 'ETI' or 'RFI' based on threshold
+            Tuple of (raw_results, clustered_results).
+            raw_results: per-snippet DataFrame (center_channel, probability,
+                         classification, freq_mhz).
+            clustered_results: per-cluster DataFrame (center_channel,
+                               peak_probability, mean_probability,
+                               cluster_width, n_snippets, freq_mhz).
         """
         # 1. Extract overlapping snippets (sample-wise normalization)
         snippets = self._extract_snippets(cadence)
         if not snippets:
             print("  ⚠️  No snippets extracted (input too narrow?)")
-            return pd.DataFrame()
+            return pd.DataFrame(), pd.DataFrame()
 
         centers = np.array([s[0] for s in snippets])
         
@@ -204,9 +275,7 @@ class InferenceEngine:
               f"(step={self.sliding_step})")
 
         # 2. Batch inference (streaming to save RAM)
-        # Avoid creating specs = np.array(...) to save 50GB+ of RAM on large cadences
         all_probs = []
-        # Process in chunks of 1024 snippets to keep memory low
         chunk_size = 1024 
         for i in tqdm(range(0, len(snippets), chunk_size), desc="    Batch Inference", leave=False):
             chunk_snippets = snippets[i:i+chunk_size]
@@ -216,7 +285,7 @@ class InferenceEngine:
         
         probs = np.concatenate(all_probs)
 
-        # 3. Build results DataFrame
+        # 3. Build raw results DataFrame
         results = pd.DataFrame({
             'center_channel': centers,
             'probability': probs,
@@ -236,16 +305,24 @@ class InferenceEngine:
         results = results.sort_values('probability', ascending=False)
         results = results.reset_index(drop=True)
 
-        print("\n  Top detections:")
-        print(results[['center_channel', 'probability', 'classification']].head(5))
+        # 4. Cluster adjacent detections
+        clusters = self.cluster_detections(results)
 
+        # 5. Summary
         n_eti = (results['classification'] == 'ETI').sum()
-        n_attn = (results['probability'] >= self.attn_threshold).sum()
-        print(f"  Results: {n_eti} ETI candidates "
-              f"(threshold={self.threshold}), "
-              f"{n_attn} high-confidence (p≥{self.attn_threshold})")
+        n_clusters = len(clusters)
+        n_high = (clusters['peak_probability'] >= self.attn_threshold).sum() if not clusters.empty else 0
 
-        return results
+        print(f"\n  Raw detections: {n_eti} ETI snippets (threshold={self.threshold})")
+        print(f"  Clustered:      {n_clusters} distinct signals "
+              f"({n_high} high-confidence, p≥{self.attn_threshold})")
+
+        if not clusters.empty:
+            print("\n  Top clusters:")
+            print(clusters[['center_channel', 'peak_probability',
+                            'n_snippets', 'cluster_width']].head(5).to_string(index=False))
+
+        return results, clusters
 
     def get_snippet_spectrogram(
         self,
