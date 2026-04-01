@@ -19,6 +19,8 @@ import torch.nn.functional as F
 import numpy as np
 import os
 import time
+import json
+import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from torch.utils.data import DataLoader
@@ -99,7 +101,10 @@ def train(
 
     # Initialize best Val F1 to 0
     best_val_f1 = -1.0
+    best_val_epoch = 0
+    best_val_loss = float('inf')
     global_epoch = 0
+    train_start_time = time.time()
 
     # Build the list of phases depending on mode
     if mode == 'full':
@@ -201,6 +206,8 @@ def train(
             # Save best model based on F1
             if val_f1 > best_val_f1:
                 best_val_f1 = val_f1
+                best_val_epoch = global_epoch
+                best_val_loss = val_loss
                 torch.save(model.state_dict(), save_dir / 'best_model.pth')
                 print(f'  → New best model saved! (val_f1={val_f1:.4f})')
 
@@ -221,6 +228,32 @@ def train(
 
     # Save training history
     np.savez(save_dir / 'history.npz', **history)
+
+    # Save JSON training log for experiment tracking
+    duration_minutes = (time.time() - train_start_time) / 60.0
+    full_config = config.pop('_full_config', config)
+    log = {
+        'timestamp': datetime.datetime.now().isoformat(),
+        'duration_minutes': round(duration_minutes, 2),
+        'config': full_config,
+        'best_epoch': best_val_epoch,
+        'best_val_f1': round(best_val_f1, 6),
+        'best_val_loss': round(best_val_loss, 6),
+        'final_epoch': global_epoch,
+        'history': {
+            'train_loss': [round(v, 6) for v in history['train_loss']],
+            'val_loss':   [round(v, 6) for v in history['val_loss']],
+            'val_accuracy': [round(v, 6) for v in history['val_accuracy']],
+            'val_auc':    [round(v, 6) for v in history['val_auc']],
+            'val_f1':     [round(v, 6) for v in history['val_f1']],
+            'lr':         [round(v, 10) for v in history['lr']],
+            'phase':      history['phase'],
+        },
+    }
+    log_path = save_dir / 'training_log.json'
+    with open(log_path, 'w') as f:
+        json.dump(log, f, indent=2, default=str)
+    print(f'Training log saved to: {log_path}')
 
     return history
 

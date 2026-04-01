@@ -128,6 +128,9 @@ def main():
     # for progressive unfreezing functions
     actual_model = model.module if hasattr(model, 'module') else model
 
+    # Inject full config to save in the JSON training log
+    train_cfg['_full_config'] = config
+
     history = train(
         model=actual_model,
         train_loader=train_loader,
