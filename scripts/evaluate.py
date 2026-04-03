@@ -20,6 +20,7 @@ import torch
 from pathlib import Path
 from tqdm import tqdm
 from typing import Tuple
+from sklearn.metrics import f1_score, precision_score, recall_score, precision_recall_curve
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -45,7 +46,7 @@ def evaluate(
     """Run inference on the dataset and return (labels, probabilities)."""
     model.eval()
     loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True
+        dataset, batch_size=batch_size, shuffle=False, num_workers=0, pin_memory=True
     )
 
     all_probs = []
@@ -69,6 +70,78 @@ def evaluate(
     return all_labels, all_probs
 
 
+def find_optimal_threshold(
+    labels: np.ndarray,
+    probs: np.ndarray,
+    metric: str = 'f1',
+    n_steps: int = 199,
+) -> dict:
+    """
+    Sweep thresholds and return the one that maximises the chosen metric.
+
+    Args:
+        labels:  Ground-truth binary labels.
+        probs:   Model output probabilities in [0, 1].
+        metric:  'f1' (default), 'precision', or 'recall'.
+        n_steps: Number of threshold values to evaluate.
+
+    Returns:
+        dict with keys: optimal_threshold, best_f1, best_precision,
+        best_recall, thresholds, f1_scores, precisions, recalls.
+    """
+    thresholds = np.linspace(0.01, 0.99, n_steps)
+    f1s, precs, recs = [], [], []
+
+    for t in thresholds:
+        preds = (probs >= t).astype(int)
+        f1s.append(f1_score(labels, preds, zero_division=0))
+        precs.append(precision_score(labels, preds, zero_division=0))
+        recs.append(recall_score(labels, preds, zero_division=0))
+
+    f1s = np.array(f1s)
+    precs = np.array(precs)
+    recs = np.array(recs)
+
+    best_idx = int(np.argmax(f1s))
+    opt_t = float(thresholds[best_idx])
+
+    print("\n" + "=" * 52)
+    print("  Threshold Sweep (metric: F1-score maximisation)")
+    print("=" * 52)
+    print(f"  {'Threshold':>10}  {'F1':>8}  {'Precision':>10}  {'Recall':>8}")
+    print("  " + "-" * 48)
+
+    # Print a compact table at a few key thresholds
+    display_thresholds = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+    for t_disp in display_thresholds:
+        idx = int(np.argmin(np.abs(thresholds - t_disp)))
+        marker = " ◄ OPTIMAL" if idx == best_idx else ""
+        print(f"  {thresholds[idx]:>10.2f}  {f1s[idx]:>8.4f}  "
+              f"{precs[idx]:>10.4f}  {recs[idx]:>8.4f}{marker}")
+
+    # Always show the true optimum if it's not in the display list
+    if not any(abs(opt_t - t) < 0.01 for t in display_thresholds):
+        print(f"  {opt_t:>10.2f}  {f1s[best_idx]:>8.4f}  "
+              f"{precs[best_idx]:>10.4f}  {recs[best_idx]:>8.4f}  ◄ OPTIMAL")
+
+    print("=" * 52)
+    print(f"\n  ✅ Optimal threshold: {opt_t:.4f}")
+    print(f"     F1={f1s[best_idx]:.4f}  "
+          f"Precision={precs[best_idx]:.4f}  "
+          f"Recall={recs[best_idx]:.4f}")
+
+    return {
+        'optimal_threshold': opt_t,
+        'best_f1': float(f1s[best_idx]),
+        'best_precision': float(precs[best_idx]),
+        'best_recall': float(recs[best_idx]),
+        'thresholds': thresholds.tolist(),
+        'f1_scores': f1s.tolist(),
+        'precisions': precs.tolist(),
+        'recalls': recs.tolist(),
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description='RST — Model Evaluation')
     parser.add_argument('--config', '-c', type=str, default='configs/default.yaml',
@@ -85,6 +158,8 @@ def main():
                         help='Classification threshold (default: 0.5)')
     parser.add_argument('--output', '-o', type=str, default=None,
                         help='Path to save results (JSON)')
+    parser.add_argument('--find-optimal', action='store_true',
+                        help='Sweep thresholds and report the one maximising F1')
 
     args = parser.parse_args()
 
@@ -130,13 +205,22 @@ def main():
     # Run evaluation
     labels, probs = evaluate(model, dataset, args.batch_size, device)
 
-    # Print results
+    # Threshold sweep (optional)
+    sweep_results = None
+    if args.find_optimal:
+        sweep_results = find_optimal_threshold(labels, probs)
+        # Override threshold with the optimal one for the report below
+        args.threshold = sweep_results['optimal_threshold']
+
+    # Print full classification report at chosen threshold
     print_report(labels, probs, threshold=args.threshold)
 
     # Save to JSON if requested
     if args.output:
         import json
         metrics = compute_metrics(labels, probs, threshold=args.threshold)
+        if sweep_results is not None:
+            metrics['threshold_sweep'] = sweep_results
         output_path = Path(args.output)
         with open(output_path, 'w') as f:
             json.dump(metrics, f, indent=4)
