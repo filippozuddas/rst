@@ -160,12 +160,19 @@ def train(
             betas=(0.95, 0.999),     # Same as the AST paper
         )
 
-        # CosineAnnealingLR: smoothly decreases LR following a cosine curve
+        # Scheduler: configurable via config['scheduler'] ('cosine' or 'plateau')
+        scheduler_name = config.get('scheduler', 'cosine').lower()
         min_lr = config.get('eta_min', 1e-7)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=epochs, eta_min=min_lr
-        )
-        print(f'  Scheduler: CosineAnnealingLR (T_max={epochs}, eta_min={min_lr})')
+        if scheduler_name == 'plateau':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, mode='min', factor=0.5, patience=3, min_lr=min_lr
+            )
+            print(f'  Scheduler: ReduceLROnPlateau (patience=3, factor=0.5, min_lr={min_lr})')
+        else:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=epochs, eta_min=min_lr
+            )
+            print(f'  Scheduler: CosineAnnealingLR (T_max={epochs}, eta_min={min_lr})')
 
         # ============= EPOCH LOOP ============= #
         for epoch in range(epochs):
@@ -183,8 +190,11 @@ def train(
                 model, val_loader, loss_fn, device,
             )
 
-            # Step the scheduler (Cosine doesn't need val_loss)
-            scheduler.step()
+            # Step the scheduler
+            if scheduler_name == 'plateau':
+                scheduler.step(val_loss)   # ReduceLROnPlateau monitors val_loss
+            else:
+                scheduler.step()            # CosineAnnealingLR steps every epoch
 
             # Save to history
             history['train_loss'].append(train_loss)
