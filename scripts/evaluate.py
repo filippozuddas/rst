@@ -142,6 +142,64 @@ def find_optimal_threshold(
     }
 
 
+def plot_threshold_sweep(sweep: dict, save_path: str = None):
+    """
+    Plot F1 / Precision / Recall vs threshold, plus the PR curve.
+    """
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    thresholds = np.array(sweep['thresholds'])
+    f1s        = np.array(sweep['f1_scores'])
+    precs      = np.array(sweep['precisions'])
+    recs       = np.array(sweep['recalls'])
+    opt_t      = sweep['optimal_threshold']
+    opt_f1     = sweep['best_f1']
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle('RST — Threshold Analysis', fontsize=14, fontweight='bold')
+
+    # ── Panel 1: metrics vs threshold ──────────────────────────────────────
+    ax = axes[0]
+    ax.plot(thresholds, f1s,   color='#2196F3', lw=2,   label='F1-score')
+    ax.plot(thresholds, precs, color='#4CAF50', lw=1.5, label='Precision', ls='--')
+    ax.plot(thresholds, recs,  color='#FF5722', lw=1.5, label='Recall',    ls=':')
+    ax.axvline(opt_t, color='#FFC107', lw=1.5, ls='--',
+               label=f'Optimal t={opt_t:.3f}  (F1={opt_f1:.4f})')
+    ax.scatter([opt_t], [opt_f1], color='#FFC107', zorder=5, s=80)
+    ax.set_xlabel('Threshold', fontsize=11)
+    ax.set_ylabel('Score', fontsize=11)
+    ax.set_title('Metrics vs Threshold', fontsize=12)
+    ax.legend(fontsize=9)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0.5, 1.01)
+    ax.grid(alpha=0.3)
+
+    # ── Panel 2: Precision-Recall curve ────────────────────────────────────
+    ax2 = axes[1]
+    ax2.plot(recs, precs, color='#9C27B0', lw=2)
+    # Mark the optimal operating point
+    opt_idx = int(np.argmin(np.abs(thresholds - opt_t)))
+    ax2.scatter([recs[opt_idx]], [precs[opt_idx]], color='#FFC107',
+                zorder=5, s=80, label=f't={opt_t:.3f}')
+    ax2.set_xlabel('Recall', fontsize=11)
+    ax2.set_ylabel('Precision', fontsize=11)
+    ax2.set_title('Precision-Recall Curve', fontsize=12)
+    ax2.legend(fontsize=9)
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(0, 1.01)
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+
+    if save_path is None:
+        save_path = 'threshold_analysis.png'
+    plt.savefig(save_path, dpi=150, bbox_inches='tight')
+    plt.close()
+    print(f"\n  📈 Plot saved to: {save_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='RST — Model Evaluation')
     parser.add_argument('--config', '-c', type=str, default='configs/default.yaml',
@@ -160,6 +218,8 @@ def main():
                         help='Path to save results (JSON)')
     parser.add_argument('--find-optimal', action='store_true',
                         help='Sweep thresholds and report the one maximising F1')
+    parser.add_argument('--plot', action='store_true',
+                        help='Plot F1/P/R vs threshold and PR curve (requires --find-optimal)')
 
     args = parser.parse_args()
 
@@ -211,6 +271,14 @@ def main():
         sweep_results = find_optimal_threshold(labels, probs)
         # Override threshold with the optimal one for the report below
         args.threshold = sweep_results['optimal_threshold']
+
+        # Plot if requested
+        if args.plot:
+            plot_path = (
+                str(Path(args.output).with_suffix('.png'))
+                if args.output else 'threshold_analysis.png'
+            )
+            plot_threshold_sweep(sweep_results, save_path=plot_path)
 
     # Print full classification report at chosen threshold
     print_report(labels, probs, threshold=args.threshold)
