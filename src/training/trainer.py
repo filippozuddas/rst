@@ -52,6 +52,24 @@ class FocalLoss(nn.Module):
         return (focal_weight * bce).mean()
 
 
+class LabelSmoothBCELoss(nn.Module):
+    """
+    BCE with label smoothing to prevent overconfidence.
+    Transforms hard targets {0, 1} → {ε/2, 1-ε/2} before computing BCE.
+
+    With ε=0.1: targets become {0.05, 0.95}, preventing logits from
+    being pushed to ±∞ and stabilizing the validation loss curve.
+    """
+    def __init__(self, smoothing: float = 0.1):
+        super().__init__()
+        self.smoothing = smoothing
+        self.bce = nn.BCEWithLogitsLoss()
+
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        targets_smooth = targets * (1.0 - self.smoothing) + self.smoothing / 2.0
+        return self.bce(logits, targets_smooth)
+
+
 def train(
     model: nn.Module,
     train_loader: DataLoader,
@@ -76,11 +94,15 @@ def train(
 
     # Loss function configuration
     use_focal = config.get('focal_loss', False)
+    label_smoothing = config.get('label_smoothing', 0.0)
     if use_focal:
         gamma = config.get('focal_gamma', 2.0)
         alpha = config.get('focal_alpha', 0.75)
         loss_fn = FocalLoss(gamma=gamma, alpha=alpha)
         print(f"Loss Function: FocalLoss (gamma={gamma}, alpha={alpha})")
+    elif label_smoothing > 0:
+        loss_fn = LabelSmoothBCELoss(smoothing=label_smoothing)
+        print(f"Loss Function: BCEWithLogitsLoss + LabelSmoothing (ε={label_smoothing})")
     else:
         loss_fn = nn.BCEWithLogitsLoss()
         print("Loss Function: BCEWithLogitsLoss")
@@ -160,17 +182,63 @@ def train(
             betas=(0.95, 0.999),     # Same as the AST paper
         )
 
-        # Scheduler: configurable via config['scheduler'] ('cosine' or 'plateau')
-        scheduler_name = config.get('scheduler', 'cosine').lower()
+        # Scheduler: configurable via config['scheduler']
+        # Supported: 'cosine', 'plateau', 'plateau_f1', 'warmup_cosine', 'onecycle'
+        scheduler_name = config.get('scheduler', 'warmup_cosine').lower()
         min_lr = config.get('eta_min', 1e-7)
+        plateau_patience = config.get('plateau_patience', 5)
+        plateau_factor = config.get('plateau_factor', 0.5)
+        steps_per_epoch = len(train_loader) if train_loader is not None else 1
+
         if scheduler_name == 'plateau':
             scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer, mode='min', factor=0.5, patience=3, min_lr=min_lr
+                optimizer, mode='min', factor=plateau_factor,
+                patience=plateau_patience, min_lr=min_lr,
             )
-            print(f'  Scheduler: ReduceLROnPlateau (patience=3, factor=0.5, min_lr={min_lr})')
-        else:
+            print(f'  Scheduler: ReduceLROnPlateau (patience={plateau_patience}, '
+                  f'factor={plateau_factor}, min_lr={min_lr}, monitor=val_loss)')
+
+        elif scheduler_name == 'plateau_f1':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, mode='max', factor=plateau_factor,
+                patience=plateau_patience, min_lr=min_lr,
+            )
+            print(f'  Scheduler: ReduceLROnPlateau (patience={plateau_patience}, '
+                  f'factor={plateau_factor}, min_lr={min_lr}, monitor=val_f1)')
+
+        elif scheduler_name == 'warmup_cosine':
+            warmup_epochs = config.get('warmup_epochs', 3)
+            warmup_start_factor = config.get('warmup_start_factor', 0.1)
+            warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
+                optimizer, start_factor=warmup_start_factor,
+                end_factor=1.0, total_iters=warmup_epochs,
+            )
+            cosine_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                optimizer, T_max=epochs - warmup_epochs, eta_min=min_lr,
+            )
+            scheduler = torch.optim.lr_scheduler.SequentialLR(
+                optimizer,
+                schedulers=[warmup_scheduler, cosine_scheduler],
+                milestones=[warmup_epochs],
+            )
+            print(f'  Scheduler: WarmupCosine (warmup={warmup_epochs}ep, '
+                  f'start_factor={warmup_start_factor}, T_max={epochs - warmup_epochs}, '
+                  f'eta_min={min_lr})')
+
+        elif scheduler_name == 'onecycle':
+            max_lr = config.get('max_lr', 5e-5)
+            scheduler = torch.optim.lr_scheduler.OneCycleLR(
+                optimizer, max_lr=max_lr,
+                steps_per_epoch=steps_per_epoch,
+                epochs=epochs, pct_start=0.3,
+                anneal_strategy='cos',
+            )
+            print(f'  Scheduler: OneCycleLR (max_lr={max_lr}, '
+                  f'steps/epoch={steps_per_epoch}, pct_start=0.3)')
+
+        else:  # 'cosine' or fallback
             scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                optimizer, T_max=epochs, eta_min=min_lr
+                optimizer, T_max=epochs, eta_min=min_lr,
             )
             print(f'  Scheduler: CosineAnnealingLR (T_max={epochs}, eta_min={min_lr})')
 
@@ -180,9 +248,11 @@ def train(
             current_lr = optimizer.param_groups[0]['lr']
 
             # --- Training ---
+            # OneCycleLR steps per batch, so pass it to _train_one_epoch
+            batch_scheduler = scheduler if scheduler_name == 'onecycle' else None
             train_loss = _train_one_epoch(
                 model, train_loader, loss_fn, optimizer, scaler,
-                gradient_clip, device,
+                gradient_clip, device, batch_scheduler=batch_scheduler,
             )
 
             # --- Validation ---
@@ -190,11 +260,13 @@ def train(
                 model, val_loader, loss_fn, device,
             )
 
-            # Step the scheduler
+            # Step the scheduler (OneCycleLR steps per batch, handled in _train_one_epoch)
             if scheduler_name == 'plateau':
-                scheduler.step(val_loss)   # ReduceLROnPlateau monitors val_loss
-            else:
-                scheduler.step()            # CosineAnnealingLR steps every epoch
+                scheduler.step(val_loss)
+            elif scheduler_name == 'plateau_f1':
+                scheduler.step(val_f1)
+            elif scheduler_name != 'onecycle':  # cosine, warmup_cosine
+                scheduler.step()
 
             # Save to history
             history['train_loss'].append(train_loss)
@@ -276,10 +348,14 @@ def _train_one_epoch(
     scaler: GradScaler,
     gradient_clip: float,
     device: torch.device,
+    batch_scheduler=None,
 ) -> float:
     """
     Run ONE training epoch.
     Returns the average loss over the epoch.
+
+    If batch_scheduler is provided (e.g. OneCycleLR), it is stepped
+    after every optimizer update instead of once per epoch.
     """
     model.train()
     total_loss = 0.0
@@ -308,6 +384,10 @@ def _train_one_epoch(
         # Update weights
         scaler.step(optimizer)
         scaler.update()
+
+        # Step per-batch scheduler (OneCycleLR)
+        if batch_scheduler is not None:
+            batch_scheduler.step()
 
         total_loss += loss.item()
         n_batches += 1
