@@ -58,9 +58,13 @@ class SignalParams:
     snr_min: float = 5.0
     snr_max: float = 50.0
 
-    # Signal width parameters (|DR|×dt + U(offset_min, offset_max) Hz)
-    width_offset_min: float = 5.0    # Min offset above drift-induced width (Hz)
-    width_offset_max: float = 55.0   # Max offset above drift-induced width (Hz)
+    # ETI width parameters — narrowband (|DR|×dt + U(eti_offset_min, eti_offset_max))
+    eti_width_offset_min: float = 1.0    # Hz
+    eti_width_offset_max: float = 10.0   # Hz
+
+    # RFI width parameters — broader (|DR|×dt + U(rfi_offset_min, rfi_offset_max))
+    rfi_width_offset_min: float = 5.0    # Hz
+    rfi_width_offset_max: float = 55.0   # Hz
 
     # Drift rate parameters — log-uniform with random sign
     max_drift_rate: float = field(
@@ -177,15 +181,24 @@ class SignalGenerator:
 
         return drift_rate, true_slope
 
-    def _calculate_width(self, drift_rate: float) -> float:
-        """Width formula: |DR|×dt + U(offset_min, offset_max).
+    def _calculate_eti_width(self, drift_rate: float) -> float:
+        """ETI width formula: |DR|×dt + U(eti_offset_min, eti_offset_max).
 
-        The |DR|×dt term compensates for the drift within a single time bin,
-        and the random offset prevents quantization artefacts.
+        Narrowband: intrinsic width 1-10 Hz, plus smearing compensation.
         """
         drift_component = abs(drift_rate) * self.params.dt
-        offset = self.rng.uniform(self.params.width_offset_min,
-                                  self.params.width_offset_max)
+        offset = self.rng.uniform(self.params.eti_width_offset_min,
+                                  self.params.eti_width_offset_max)
+        return drift_component + offset
+
+    def _calculate_rfi_width(self, drift_rate: float) -> float:
+        """RFI width formula: |DR|×dt + U(rfi_offset_min, rfi_offset_max).
+
+        Broader: terrestrial RFI spans wider frequency ranges.
+        """
+        drift_component = abs(drift_rate) * self.params.dt
+        offset = self.rng.uniform(self.params.rfi_width_offset_min,
+                                  self.params.rfi_width_offset_max)
         return drift_component + offset
 
     def _select_f_profile(self, width: float):
@@ -237,11 +250,11 @@ class SignalGenerator:
             data=data
         )
 
+    # ETI signal injection (used for True samples)
     # Minimum time bin the signal must still be in-bounds at (end of ON₂).
     # This guarantees the signal is visible in at least 2 of 3 ON windows.
     _MIN_VISIBLE_BIN = 47
 
-    # ETI signal injection (used for True samples)
     def inject_signal(self,
                       data: np.ndarray,
                       snr: Optional[float] = None,
@@ -292,7 +305,7 @@ class SignalGenerator:
                 else:
                     start_channel = int(self.rng.integers(1, fchans - 1))
 
-        width = self._calculate_width(drift_rate)
+        width = self._calculate_eti_width(drift_rate)
 
         # Intercept for tracking
         b = tchans - true_slope * start_channel
@@ -375,7 +388,7 @@ class SignalGenerator:
                 drift_rate, _ = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
             else:
                 drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             path = stg.constant_path(f_start=f_start,
                                      drift_rate=drift_rate * u.Hz / u.s)
             t_prof = stg.constant_t_profile(level=intensity)
@@ -398,7 +411,7 @@ class SignalGenerator:
             # RFI that wanders in frequency over time
             spread = self.rng.uniform(30, 300) * u.Hz
             drift_rate = self.rng.uniform(-0.5, 0.5)
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             path = stg.simple_rfi_path(f_start=f_start,
                                        drift_rate=drift_rate * u.Hz / u.s,
                                        spread=spread,
@@ -413,7 +426,7 @@ class SignalGenerator:
                 drift_rate, _ = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
             else:
                 drift_rate, _ = self._sample_drift_rate()
-            width = self._calculate_width(drift_rate)
+            width = self._calculate_rfi_width(drift_rate)
             period = self.rng.uniform(50, 300) * u.s
             amplitude = intensity * self.rng.uniform(0.3, 0.8)
             path = stg.constant_path(f_start=f_start,
