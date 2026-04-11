@@ -8,6 +8,13 @@ End-to-end pipeline for building RST training datasets:
 2. Generate True/False samples with realistic signal injection
 3. Preprocess: stack 6 obs → (96, 1024), compute z-score stats
 4. Save as .npz ready for training
+
+Design choices (PDR v2):
+- True samples: 40% ETI-only + 60% ETI with RFI disturbance
+- False samples: 60% injected RFI (1-4 signals), 40% pure background
+- SNR: log-uniform [5, 50]
+- Drift rate: log-uniform ±4 Hz/s
+- Target dataset size: 60k (30k True + 30k False)
 """
 
 import argparse
@@ -20,7 +27,7 @@ import os
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.data.cadence_generator import CadenceGenerator, CadenceParams
+from src.data.cadence_generator import CadenceGenerator, CadenceParams, SignalParams
 from src.data.preprocessing import stack_cadence
 
 
@@ -32,7 +39,7 @@ def build_dataset(
     val_split: float = 0.15,
     seed: int = None,
     fchans: int = 1024,
-    snr_min: float = 5.0,
+    snr_min: float = 10.0,
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
@@ -63,9 +70,9 @@ def build_dataset(
         rng = np.random.default_rng(seed)
         print(f"  Generated random seed: {seed}")
 
-    # Load backgrounds
+    # ---- 1. Load backgrounds ----
     print(f"\n{'='*60}")
-    print("RST DATASET BUILDER")
+    print("RST DATASET BUILDER (v2)")
     print(f"{'='*60}")
 
     data = np.load(backgrounds_path, allow_pickle=True)
@@ -73,17 +80,16 @@ def build_dataset(
     print(f"  Loaded {len(plate)} backgrounds from {backgrounds_path}")
     print(f"  Shape: {plate.shape}")
 
-    # Initialize cadence generator
+    # ---- 2. Initialize cadence generator ----
     params = CadenceParams(
         fchans=fchans,
-        snr_min=snr_min,
-        snr_max=snr_max,
+        signal_params=SignalParams(snr_min=snr_min, snr_max=snr_max),
         eti_only_fraction=eti_only_fraction,
         rfi_fraction=rfi_fraction,
     )
     gen = CadenceGenerator(params=params, plate=plate, seed=seed)
 
-    # Generate samples
+    # ---- 3. Generate samples ----
     total = n_true + n_false
     max_drift = gen.signal_gen.params.max_drift_rate
     print(f"\n  Configuration:")
@@ -121,7 +127,7 @@ def build_dataset(
     print(f"\n  Dataset shape: {spectrograms.shape}")
     print(f"  Labels: {int(labels.sum())} True, {int(len(labels) - labels.sum())} False")
 
-    # Shuffle and split
+    # ---- 4. Shuffle and split ----
     indices = rng.permutation(total)
     spectrograms = spectrograms[indices]
     labels = labels[indices]
@@ -134,7 +140,7 @@ def build_dataset(
     val_specs = spectrograms[n_train:]
     val_labels = labels[n_train:]
 
-    # Save
+    # ---- 6. Save ----
     train_path = output_dir / "train.npz"
     val_path = output_dir / "val.npz"
 
@@ -149,7 +155,7 @@ def build_dataset(
         labels=val_labels,
     )
 
-    # Save generation metadata
+    # ---- 7. Save generation metadata ----
     import json
     meta = {
         'seed': seed,
@@ -185,7 +191,7 @@ def build_dataset(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="RST — Build training dataset from extracted backgrounds"
+        description="RST — Build training dataset from extracted backgrounds (v2)"
     )
     parser.add_argument('--backgrounds', '-b', required=True,
                         help='Path to backgrounds .npz (from background_extractor)')
@@ -201,8 +207,8 @@ def main():
                         help='Random seed (default: None = random with logging)')
     parser.add_argument('--fchans', type=int, default=1024,
                         help='Frequency channels per snippet')
-    parser.add_argument('--snr-min', type=float, default=5.0,
-                        help='Minimum SNR for log-uniform sampling (default: 5)')
+    parser.add_argument('--snr-min', type=float, default=10.0,
+                        help='Minimum SNR for log-uniform sampling (default: 10)')
     parser.add_argument('--snr-max', type=float, default=50.0,
                         help='Maximum SNR for log-uniform sampling (default: 50)')
     parser.add_argument('--eti-only-fraction', type=float, default=0.4,

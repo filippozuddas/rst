@@ -5,13 +5,19 @@ RST — Cadence Generator
 Creates True, False, and SingleShot training samples by combining
 real observation backgrounds with signal injections following the
 ON-OFF pattern.
+
+Key design choices (PDR v2):
+- True samples: 40% ETI-only (single signal in ON) +
+                60% ETI + 1-3 disturbance RFI (across all obs)
+- False samples: 60% with injected RFI (1-4 signals), 40% pure background
+- Background: only real plates from HDF5 (NoiseGenerator removed)
 """
 
 import numpy as np
 import setigen as stg
 from astropy import units as u
 from typing import Optional, Tuple, Union
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from .signal_generator import SignalGenerator, SignalParams
 
 
@@ -22,17 +28,12 @@ class CadenceParams:
     fchans: int = 1024            # Frequency channels (RST snippet width)
     num_observations: int = 6     # Cadence length (ON-OFF-ON-OFF-ON-OFF)
 
-    # Instrument parameters
-    df: float = 2.7939677238464355
-    dt: float = 18.25361108
-
-    # SNR parameters — used for log-uniform sampling via SignalGenerator
-    snr_min: float = 5.0
-    snr_max: float = 50.0
+    # Signal & Instrument parameters (centralized)
+    signal_params: SignalParams = field(default_factory=SignalParams)
 
     # True sample composition
     eti_only_fraction: float = 0.4   # 40% solo ETI, 60% ETI + RFI disturbance
-    max_disturbance_rfi: int = 3     # Max RFI signals added to True samples
+    max_disturbance_rfi: int = 2     # Max RFI signals added to True samples
 
     # False sample composition
     rfi_fraction: float = 0.6        # 60% RFI injected, 40% pure background
@@ -50,7 +51,7 @@ class CadenceGenerator:
     - False: 60% RFI (1-4 signals across all obs), 40% pure real background
     - SingleShot: Single signal injection for sensitivity testing
 
-    Requires a plate of real backgrounds
+    Requires a plate of real backgrounds (no synthetic noise fallback).
     """
 
     def __init__(self,
@@ -61,6 +62,7 @@ class CadenceGenerator:
         Args:
             params: Cadence generation parameters
             plate: Real observation backgrounds, shape (N, 6, tchans, fchans).
+                   Required — no synthetic noise fallback.
             seed: Random seed (None for random)
         """
         self.params = params or CadenceParams()
@@ -73,14 +75,8 @@ class CadenceGenerator:
                 "Use background_extractor to extract from HDF5 files."
             )
 
-        # Initialize signal generator with matching params
-        signal_params = SignalParams(
-            df=self.params.df,
-            dt=self.params.dt,
-            snr_min=self.params.snr_min,
-            snr_max=self.params.snr_max,
-        )
-        self.signal_gen = SignalGenerator(signal_params, seed)
+        # Initialize signal generator with centralized params
+        self.signal_gen = SignalGenerator(self.params.signal_params, seed)
 
     def _get_background(self) -> np.ndarray:
         """Get a random background from the real plate. Returns (6, tchans, fchans)."""
@@ -132,7 +128,10 @@ class CadenceGenerator:
         counts = np.arange(1, len(weights) + 1)
         return int(self.rng.choice(counts, p=weights))
 
+    # ------------------------------------------------------------------
     # True samples
+    # ------------------------------------------------------------------
+
     def create_true_sample(self,
                            snr: Optional[float] = None) -> Tuple[np.ndarray, dict]:
         """
@@ -225,7 +224,10 @@ class CadenceGenerator:
         result, _ = self.create_true_sample(snr)
         return result
 
+    # ------------------------------------------------------------------
     # False samples
+    # ------------------------------------------------------------------
+
     def create_false_sample(self,
                             snr: Optional[float] = None) -> np.ndarray:
         """
@@ -239,11 +241,11 @@ class CadenceGenerator:
         Returns (6, tchans, fchans).
         """
         background = self._get_background()
-
-        if snr is None and self.rng.random() > self.params.rfi_fraction:
-            return background
-            
         stacked = self._stack_cadence(background)
+
+        # 40% chance of returning pure background (if no forced SNR is provided)
+        if snr is None and self.rng.random() > self.params.rfi_fraction:
+            return self._unstack_cadence(stacked)
 
         n_rfi = self._sample_rfi_count()
 
@@ -252,7 +254,10 @@ class CadenceGenerator:
 
         return self._unstack_cadence(stacked)
 
+    # ------------------------------------------------------------------
     # Sensitivity testing
+    # ------------------------------------------------------------------
+
     def create_single_shot_sample(self,
                                   snr: Optional[float] = None) -> np.ndarray:
         """
@@ -275,7 +280,10 @@ class CadenceGenerator:
 
         return result
 
+    # ------------------------------------------------------------------
     # Batch generation
+    # ------------------------------------------------------------------
+
     def generate_batch(self,
                        sample_type: str,
                        batch_size: int,

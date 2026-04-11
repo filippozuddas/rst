@@ -52,11 +52,12 @@ def stack_cadence(cadence: np.ndarray) -> np.ndarray:
 
 
 def normalize_robust(spec: np.ndarray) -> np.ndarray:
-    """Robust Hybrid Preprocessing for Neural Networks.
+    """Robust preprocessing pipeline for the RST model.
 
-    1. Log-Scaling: compresses the huge dynamic range of radio power.
+    1. Log-Scaling: compresses the huge dynamic range of raw radio power.
     2. Per-Observation Z-Score: zero-centers each of the 6 observations
        independently to remove broadband gain differences (Stripe Bias).
+       NOTE: no division by 2 — preserves signal amplitude.
     3. Clip: removes extreme RFI peaks that survive normalization.
     """
     # 1. Log-Scaling (prevent log(0) and NaNs)
@@ -70,7 +71,7 @@ def normalize_robust(spec: np.ndarray) -> np.ndarray:
         sigma = obs.std()
         if sigma < 1e-9:          # guard against constant snippets
             sigma = 1.0
-        spec[i*16:(i+1)*16, :] = (obs - mu) / (sigma * 2)
+        spec[i*16:(i+1)*16, :] = (obs - mu) / sigma
 
     # 3. Clip extreme outliers
     return np.clip(spec, -5, 5)
@@ -88,7 +89,6 @@ def preprocess_cadence(
         cadence: Array (6, 16, n_freq) raw.
         center_channel: Center channel for the snippet.
         snippet_width: Snippet width (default 1024).
-        snippet_width: Snippet width (default 1024).
 
     Returns:
         Array (96, 1024) ready for the model, as float32.
@@ -99,7 +99,5 @@ def preprocess_cadence(
     # 2. Stack the 6 observations
     stacked = stack_cadence(snippet)
 
-    # 3. Normalize using robust per-observation z-score
-    stacked = normalize_robust(stacked)
-
-    return stacked.astype(np.float32)
+    # 3. Normalize (log10 + per-obs z-score + clip)
+    return normalize_robust(stacked).astype(np.float32)

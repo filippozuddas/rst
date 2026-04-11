@@ -55,7 +55,7 @@ class SignalParams:
     fch1: float = 0                 # MHz (0 for injection on existing data)
 
     # SNR parameters — log-uniform sampling in [snr_min, snr_max]
-    snr_min: float = 5.0
+    snr_min: float = 10.0
     snr_max: float = 50.0
 
     # ETI width parameters — narrowband (|DR|×dt + U(eti_offset_min, eti_offset_max))
