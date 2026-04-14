@@ -102,6 +102,12 @@ class RSTModel(nn.Module):
 
         self.v = timm.create_model(model_names[model_size], pretrained=imagenet_pretrain)
 
+        # Save original pretrained patch embedding weights BEFORE replacing
+        # the module, so we can use them for RGB→1 channel conversion later.
+        if imagenet_pretrain:
+            _orig_patch_weight = self.v.patch_embed.proj.weight.data.clone()
+            _orig_patch_bias = self.v.patch_embed.proj.bias.data.clone()
+
         # Replace timm's PatchEmbed with our custom version that accepts arbitrary input sizes
         self.v.patch_embed = PatchEmbed(
             img_size=self.v.patch_embed.img_size if hasattr(self.v.patch_embed, 'img_size') else 384,
@@ -139,11 +145,11 @@ class RSTModel(nn.Module):
             stride=(fstride, tstride),
         )
         if imagenet_pretrain:
-            # Sum the 3 RGB channels → 1 channel
+            # Sum the 3 RGB channels → 1 channel using the ORIGINAL weights
             new_proj.weight = nn.Parameter(
-                torch.sum(self.v.patch_embed.proj.weight, dim=1).unsqueeze(1)
+                torch.sum(_orig_patch_weight, dim=1).unsqueeze(1)
             )
-            new_proj.bias = self.v.patch_embed.proj.bias
+            new_proj.bias = nn.Parameter(_orig_patch_bias)
         self.v.patch_embed.proj = new_proj
 
         # Adapt Positional Embedding to our patch grid size.
@@ -218,7 +224,6 @@ class RSTModel(nn.Module):
         t_dim = test_out.shape[3]
         return f_dim, t_dim
 
-    @torch.amp.autocast('cuda')
     def forward(self, x):
         """
         Forward pass of the RST model.
