@@ -231,28 +231,38 @@ class CadenceGenerator:
     def create_false_sample(self,
                             snr: Optional[float] = None) -> np.ndarray:
         """
-        Create a FALSE sample: 60% RFI (1-4 signals), 40% pure background.
-
-        Pure background samples contain only the natural noise and spectral
-        features from the real observation plate.
-        RFI count is sampled from a weighted distribution (default: P(1)=40%, 
-        P(2)=30%, P(3)=20%, P(4)=10%).
+        Create a FALSE sample: RFI, Hard False (trap), or pure background.
 
         Returns (6, tchans, fchans).
         """
         background = self._get_background()
         stacked = self._stack_cadence(background)
 
-        # 40% chance of returning pure background (if no forced SNR is provided)
+        # 1. Check for Hard False (trap) sample: ETI signal in ALL 6 scans
+        if self.rng.random() < self.params.hard_false_fraction:
+            return self._create_hard_false_sample(stacked, snr)
+
+        # 2. Check for pure background (if no forced SNR)
         if snr is None and self.rng.random() > self.params.rfi_fraction:
             return self._unstack_cadence(stacked)
 
+        # 3. Standard RFI injection
         n_rfi = self._sample_rfi_count()
-
         for _ in range(n_rfi):
             stacked, _ = self.signal_gen.inject_rfi_signal(stacked, snr)
 
         return self._unstack_cadence(stacked)
+
+    def _create_hard_false_sample(self, 
+                                  stacked_background: np.ndarray,
+                                  snr: Optional[float] = None) -> np.ndarray:
+        """
+        Create a "Hard False" sample: injects a perfect narrowband signal
+        across the full duration (all 6 scans) with NO ON-OFF mask.
+        Labeled as False (0) to force the model to look at OFF scans.
+        """
+        injected, _ = self.signal_gen.inject_cadence_signal(stacked_background, snr)
+        return self._unstack_cadence(injected)
 
     # ------------------------------------------------------------------
     # Sensitivity testing

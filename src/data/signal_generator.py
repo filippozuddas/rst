@@ -241,13 +241,13 @@ class SignalGenerator:
             return stg.constant_t_profile(level=intensity), 'constant'
 
     def _make_frame(self, data: np.ndarray) -> stg.Frame:
-        """Create a setigen Frame from existing data."""
+        """Create a setigen Frame from a COPY of existing data."""
         return stg.Frame.from_data(
             df=self.params.df * u.Hz,
             dt=self.params.dt * u.s,
             fch1=self.params.fch1 * u.MHz,
             ascending=False,
-            data=data
+            data=data.copy()
         )
 
     # ETI signal injection (used for True samples)
