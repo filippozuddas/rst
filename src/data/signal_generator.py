@@ -63,7 +63,7 @@ class SignalParams:
     eti_width_offset_max: float = 10.0   # Hz
 
     # RFI width parameters — broader (|DR|×dt + U(rfi_offset_min, rfi_offset_max))
-    rfi_width_offset_min: float = 5.0    # Hz
+    rfi_width_offset_min: float = 1.0    # Hz (Reduced from 5.0 to overlap fully with ETI range)
     rfi_width_offset_max: float = 55.0   # Hz
 
     # Drift rate parameters — log-uniform with random sign
