@@ -37,6 +37,7 @@ class CadenceParams:
 
     # False sample composition
     rfi_fraction: float = 0.6        # 60% RFI injected, 40% pure background
+    hard_false_fraction: float = 0.2 # 20% Hard False (trap) sample
     rfi_count_weights: tuple = (0.4, 0.3, 0.2, 0.1)  # P(1), P(2), P(3), P(4)
 
 
