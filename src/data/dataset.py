@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
 from typing import Optional, Tuple
 
-from .augmentation import spec_augment, mixup
+from .augmentation import spec_augment
 from .preprocessing import normalize_robust
 
 
@@ -72,29 +72,35 @@ class SETIDataset(Dataset):
             - spectrogram: float32 Tensor of shape (96, 1024)
             - label: float32 Tensor of shape (1,)
         """
-        # 1. Load and normalize (sample-wise)
+        # 1. Load raw linear power
         spec = self.spectrograms[index].astype(np.float32)
-        spec = normalize_robust(spec)
         label = float(self.labels[index])
 
-        # Convert to PyTorch tensors
-        spec = torch.from_numpy(spec)      # (96, 1024)
-        label = torch.tensor([label])       # (1,)
-
-        # 2. Mixup (training only, if alpha > 0)
+        # 2. Mixup (training only, before normalization)
+        # Applying Mixup here is physically correct (summing powers) 
+        # and more efficient than loading double data per batch.
         if self.is_training and self.mixup_alpha > 0:
             # Pick a random second sample
             mix_idx = np.random.randint(0, len(self))
             spec2 = self.spectrograms[mix_idx].astype(np.float32)
-            spec2 = normalize_robust(spec2)
             label2 = float(self.labels[mix_idx])
 
-            spec2 = torch.from_numpy(spec2)
-            label2 = torch.tensor([label2])
+            # Draw λ from the Beta distribution
+            lam = np.random.beta(self.mixup_alpha, self.mixup_alpha)
+            lam = max(lam, 1.0 - lam)
 
-            spec, label = mixup(spec, label, spec2, label2, alpha=self.mixup_alpha)
+            # Mix in linear domain
+            spec = lam * spec + (1.0 - lam) * spec2
+            label = lam * label + (1.0 - lam) * label2
 
-        # 3. SpecAugment (training only)
+        # 3. Normalize (Log-scaling + Z-score)
+        spec = normalize_robust(spec)
+        
+        # Convert to PyTorch tensors
+        spec = torch.from_numpy(spec)      # (96, 1024)
+        label = torch.tensor([label], dtype=torch.float32)       # (1,)
+
+        # 4. SpecAugment (training only)
         if self.is_training:
             if self.freq_mask > 0 or self.time_mask > 0:
                 spec = spec_augment(

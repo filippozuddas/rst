@@ -57,6 +57,7 @@ def normalize_robust(spec: np.ndarray) -> np.ndarray:
     1. Log-Scaling: compresses the huge dynamic range of radio power.
     2. Per-Observation Z-Score: zero-centers each of the 6 observations
        independently to remove broadband gain differences (Stripe Bias).
+       Vectorized for efficiency.
     3. Clip: removes extreme RFI peaks that survive normalization.
     """
     # 1. Log-Scaling (prevent log(0) and NaNs)
@@ -64,13 +65,17 @@ def normalize_robust(spec: np.ndarray) -> np.ndarray:
     spec = np.log10(spec)
 
     # 2. Per-Observation Normalization (6 observations of 16 rows each)
-    for i in range(6):
-        obs = spec[i*16:(i+1)*16, :]
-        mu = obs.mean()
-        sigma = obs.std()
-        if sigma < 1e-9:          # guard against constant snippets
-            sigma = 1.0
-        spec[i*16:(i+1)*16, :] = (obs - mu) / (sigma * 2)
+    # Reshape to (6, 16, freq_bins) to compute stats per observation
+    obs = spec.reshape(6, 16, -1)
+    mu = obs.mean(axis=(1, 2), keepdims=True)
+    sigma = obs.std(axis=(1, 2), keepdims=True)
+    
+    # Guard against zero std
+    sigma = np.where(sigma < 1e-9, 1.0, sigma)
+    
+    # Normalize and reshape back to original shape
+    spec_norm = (obs - mu) / (sigma * 2.0)
+    spec = spec_norm.reshape(spec.shape)
 
     # 3. Clip extreme outliers
     return np.clip(spec, -5, 5)
