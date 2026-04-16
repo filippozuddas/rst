@@ -108,7 +108,8 @@ def plot_candidate(
     """
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 
-    im = ax.imshow(spec, aspect='auto', cmap='viridis', origin='upper')
+    im = ax.imshow(spec, aspect='auto', cmap='inferno', origin='upper',
+                     interpolation='nearest')
 
     # Title with probability and frequency
     freq_str = f" — {freq_mhz:.2f} MHz" if freq_mhz > 0 else ""
@@ -128,7 +129,7 @@ def plot_candidate(
 
     plt.tight_layout()
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
 
 
@@ -171,16 +172,18 @@ def plot_attention_map(
              f"Channel {center_channel}{freq_str}")
 
     # Top: Original spectrogram
-    im0 = axes[0].imshow(spec, aspect='auto', cmap='inferno', origin='upper')
+    im0 = axes[0].imshow(spec, aspect='auto', cmap='inferno', origin='upper',
+                          interpolation='nearest')
     axes[0].set_title(f"Original Spectrogram  |  {title}", fontweight='bold')
     axes[0].set_ylabel("Time (bins)")
     fig.colorbar(im0, ax=axes[0], orientation='vertical', fraction=0.046,
                  pad=0.04, label="Intensity")
 
     # Bottom: Spectrogram + attention overlay
-    axes[1].imshow(spec, aspect='auto', cmap='gray', origin='upper', alpha=0.8)
+    axes[1].imshow(spec, aspect='auto', cmap='gray', origin='upper', alpha=0.8,
+                     interpolation='nearest')
     im1 = axes[1].imshow(grid_upsampled, aspect='auto', cmap='jet',
-                          origin='upper', alpha=0.5)
+                          origin='upper', alpha=0.5, interpolation='bilinear')
     axes[1].set_title("Attention Map Overlay (Last Block)", fontweight='bold')
     axes[1].set_ylabel("Time (bins)")
     axes[1].set_xlabel("Frequency (channels)")
@@ -195,5 +198,5 @@ def plot_attention_map(
 
     plt.tight_layout()
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     plt.close(fig)
