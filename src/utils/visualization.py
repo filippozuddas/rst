@@ -49,7 +49,7 @@ def apply_light_style() -> None:
         "axes.edgecolor":    GRID_COLOR,
         "axes.labelcolor":   TEXT_COLOR,
         "axes.titlecolor":   TEXT_COLOR,
-        "axes.grid":         True,
+        "axes.grid":         False,
         "grid.color":        GRID_COLOR,
         "grid.linewidth":    0.7,
         "xtick.color":       MUTED_COLOR,
@@ -500,6 +500,8 @@ def plot_prob_distribution(
     if log_scale:
         ax.set_yscale("log")
 
+    ax.grid(color=GRID_COLOR, linewidth=0.7, alpha=0.5)
+
     y_max = ax.get_ylim()[1]
     _threshold_annotation(ax, threshold, y_max)
 
@@ -584,6 +586,7 @@ def plot_prob_split(
         ax.set_xlabel("P(ETI)", fontsize=9)
         ax.set_ylabel("Count" + (" (log)" if log_scale else ""), fontsize=9)
         ax.set_xlim(0, 1)
+        ax.grid(color=GRID_COLOR, linewidth=0.7, alpha=0.5)
         ax.legend(fontsize=8, framealpha=0.8)
 
         eti_rate = n_eti / max(len(sub), 1) * 100
@@ -646,6 +649,7 @@ def plot_prob_ccdf(
     ax.set_title("RST — Complementary CDF of Classification Probabilities",
                  fontsize=14, fontweight="bold", pad=12)
     ax.set_xlim(0, 1)
+    ax.grid(color=GRID_COLOR, linewidth=0.7, alpha=0.5)
     ax.legend(fontsize=10, framealpha=0.8)
 
     plt.tight_layout()
