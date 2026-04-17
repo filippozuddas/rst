@@ -156,9 +156,21 @@ def plot_spectrogram(
     output_path: Optional[str] = None,
     cmap: str = "inferno",
     show_onoff_lines: bool = True,
-) -> None:
+    show: bool = False,
+) -> plt.Figure:
     """
     Plot a generic spectrogram, useful for debugging or notebooks.
+
+    Args:
+        spec:             2-D array (time, freq).
+        title:            Figure title.
+        output_path:      If given, saves to disk at DPI=300.
+        cmap:             Matplotlib colormap.
+        show_onoff_lines: Draw dashed white lines at ON/OFF boundaries.
+        show:             If True, call plt.show() — useful in Jupyter.
+
+    Returns:
+        The matplotlib Figure object.
     """
     apply_light_style()
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
@@ -180,7 +192,18 @@ def plot_spectrogram(
     if output_path:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
-    plt.close(fig)
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+    return fig
+
+
+_OBS_LABELS = ['ON-1', 'OFF-1', 'ON-2', 'OFF-2', 'ON-3', 'OFF-3']
+_ON_COLOR    = '#4ade80'   # green
+_OFF_COLOR   = '#f87171'   # red
 
 
 def plot_cadence_panels(
@@ -188,29 +211,97 @@ def plot_cadence_panels(
     title: str = "Cadence",
     output_path: Optional[str] = None,
     cmap: str = "inferno",
-) -> None:
+    tchans_obs: int = 16,
+    show: bool = False,
+) -> plt.Figure:
     """
-    Plot a 6-panel cadence (ON/OFF).
-    cadence: shape (6, 16, n_freq)
+    Plot a 6-panel cadence waterfall (turboSETI-style).
+
+    Accepts either:
+      - stacked spectrogram of shape (96, n_freq), split internally into 6×16 panels
+      - pre-split array of shape (6, tchans_obs, n_freq)
+
+    Args:
+        cadence:      Input array, shape (96, W) or (6, tchans_obs, W).
+        title:        Figure suptitle.
+        output_path:  If given, saves the figure to disk at DPI=300.
+        cmap:         Matplotlib colormap.
+        tchans_obs:   Time bins per observation (used when cadence is stacked).
+        show:         If True, call plt.show() — useful in Jupyter notebooks.
+
+    Returns:
+        The matplotlib Figure object.
     """
     apply_light_style()
-    fig, axes = plt.subplots(6, 1, figsize=(12, 1.3 * 6), sharex=True, sharey=True)
-    fig.suptitle(title, fontweight='bold', fontsize=14)
+
+    # ── Normalize input to (6, tchans_obs, n_freq) ──────────────────────────
+    if cadence.ndim == 2:
+        # stacked (96, W) → split into 6 panels
+        n_obs = cadence.shape[0] // tchans_obs
+        panels = [cadence[i * tchans_obs:(i + 1) * tchans_obs, :]
+                  for i in range(n_obs)]
+    elif cadence.ndim == 3:
+        panels = [cadence[i] for i in range(cadence.shape[0])]
+    else:
+        raise ValueError(f"cadence must be 2-D or 3-D, got shape {cadence.shape}")
+
+    n_obs = len(panels)
+
+    # Common intensity scale (2nd–98th percentile) across all panels
+    all_data = np.concatenate([p.flatten() for p in panels])
+    vmin = np.percentile(all_data, 2)
+    vmax = np.percentile(all_data, 98)
+
+    fig, axes = plt.subplots(
+        n_obs, 1,
+        figsize=(12, 1.3 * n_obs),
+        sharex=True, sharey=True,
+    )
+    if n_obs == 1:
+        axes = [axes]
 
     for i, ax in enumerate(axes):
-        im = ax.imshow(cadence[i], aspect='auto', cmap=cmap, origin='upper',
-                       interpolation='nearest')
-        ax.set_ylabel(f"{'ON' if i % 2 == 0 else 'OFF'}")
+        im = ax.imshow(
+            panels[i], aspect='auto', cmap=cmap,
+            vmin=vmin, vmax=vmax, origin='upper',
+            interpolation='nearest', rasterized=True,
+        )
 
-    axes[-1].set_xlabel("Frequency (channels)")
-    fig.colorbar(im, ax=axes, shrink=0.75, pad=0.02, label='Intensity')
+        # ON/OFF label badge inside each panel
+        is_on = (i % 2 == 0)
+        label_color = _ON_COLOR if is_on else _OFF_COLOR
+        ax.text(
+            0.015, 0.5, _OBS_LABELS[i],
+            transform=ax.transAxes, va='center', ha='left',
+            fontsize=11, fontweight='bold', color=label_color,
+            bbox=dict(facecolor='black', alpha=0.55,
+                      edgecolor='none', boxstyle='round,pad=0.3'),
+        )
 
+        ax.set_ylabel('Time', fontsize=10)
+        ax.set_yticks([])
+        if i < n_obs - 1:
+            ax.tick_params(labelbottom=False)
+
+    axes[-1].set_xlabel('Frequency Channel')
+    if title:
+        axes[0].set_title(title, fontweight='bold', fontsize=14, pad=8)
+
+    fig.colorbar(im, ax=axes, shrink=0.75, pad=0.02,
+                 label='Normalized Intensity')
     plt.subplots_adjust(hspace=0, wspace=0)
-    
+
     if output_path:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
-    plt.close(fig)
+        plt.savefig(output_path, dpi=DPI, bbox_inches='tight',
+                    facecolor=BG_COLOR)
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+    return fig
 
 
 def plot_candidate(
