@@ -1,26 +1,86 @@
 # -*- coding: utf-8 -*-
 """
-RST — Inference Visualization
+RST — Visualization Utilities
 
-Produces candidate spectrogram plots and attention map overlays
-for ETI candidates identified during inference.
+Centralized module for all plotting functions across the project.
+Includes functions for spectrograms, attention maps, evaluation metrics,
+and probability distributions.
 """
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 import matplotlib
 matplotlib.use('Agg')  # Non-interactive backend for Colab/server
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 from PIL import Image
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from src.models.rst_model import RSTModel
 
 
 # ------------------------------------------------------------------ #
-#  Attention Extraction (adapted from visualize_attention.py)
+#  Design System & Styling
+# ------------------------------------------------------------------ #
+
+# Light theme colors
+BG_COLOR     = "#ffffff"
+PANEL_COLOR  = "#f8f9fa"
+GRID_COLOR   = "#e5e7eb"
+TEXT_COLOR   = "#1f2937"
+MUTED_COLOR  = "#6b7280"
+
+RFI_COLOR    = "#3b82f6"   # blue
+ETI_COLOR    = "#f97316"   # orange
+THRESH_COLOR = "#f43f5e"   # rose
+
+FONT_FAMILY  = "DejaVu Sans"
+DPI          = 300
+
+
+def apply_light_style() -> None:
+    """Apply a consistent light aesthetic to all subsequent matplotlib plots."""
+    plt.rcParams.update({
+        "figure.facecolor":  BG_COLOR,
+        "axes.facecolor":    PANEL_COLOR,
+        "axes.edgecolor":    GRID_COLOR,
+        "axes.labelcolor":   TEXT_COLOR,
+        "axes.titlecolor":   TEXT_COLOR,
+        "axes.grid":         True,
+        "grid.color":        GRID_COLOR,
+        "grid.linewidth":    0.7,
+        "xtick.color":       MUTED_COLOR,
+        "ytick.color":       MUTED_COLOR,
+        "xtick.labelsize":   10,
+        "ytick.labelsize":   10,
+        "legend.facecolor":  PANEL_COLOR,
+        "legend.edgecolor":  GRID_COLOR,
+        "legend.labelcolor": TEXT_COLOR,
+        "text.color":        TEXT_COLOR,
+        "font.family":       FONT_FAMILY,
+        "figure.dpi":        DPI,
+    })
+
+
+def _threshold_annotation(ax: plt.Axes, threshold: float, y_max: float) -> None:
+    """Draw a vertical dashed line + label for the classification threshold."""
+    ax.axvline(
+        threshold, color=THRESH_COLOR, linewidth=1.5,
+        linestyle="--", alpha=0.9, zorder=5,
+    )
+    ax.text(
+        threshold + 0.01, y_max * 0.95,
+        f"threshold\n{threshold:.2f}",
+        color=THRESH_COLOR, fontsize=9, va="top", ha="left",
+        path_effects=[pe.withStroke(linewidth=2, foreground=PANEL_COLOR)],
+    )
+
+
+# ------------------------------------------------------------------ #
+#  Attention Extraction
 # ------------------------------------------------------------------ #
 class AttentionExtractor:
     """
@@ -87,8 +147,72 @@ class AttentionExtractor:
 
 
 # ------------------------------------------------------------------ #
-#  Plot Functions
+#  Spectrogram Plots
 # ------------------------------------------------------------------ #
+
+def plot_spectrogram(
+    spec: np.ndarray,
+    title: str = "Spectrogram",
+    output_path: Optional[str] = None,
+    cmap: str = "inferno",
+    show_onoff_lines: bool = True,
+) -> None:
+    """
+    Plot a generic spectrogram, useful for debugging or notebooks.
+    """
+    apply_light_style()
+    fig, ax = plt.subplots(1, 1, figsize=(15, 5))
+
+    im = ax.imshow(spec, aspect='auto', cmap=cmap, origin='upper',
+                   interpolation='nearest')
+
+    ax.set_title(title, fontweight='bold', fontsize=13)
+    ax.set_ylabel("Time (bins)")
+    ax.set_xlabel("Frequency (channels)")
+    fig.colorbar(im, ax=ax, orientation='vertical', fraction=0.046,
+                 pad=0.04, label="Intensity")
+
+    if show_onoff_lines:
+        for i in range(1, 6):
+            ax.axhline(i * 16 - 0.5, color='white', lw=0.5, ls='--', alpha=0.5)
+
+    plt.tight_layout()
+    if output_path:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
+    plt.close(fig)
+
+
+def plot_cadence_panels(
+    cadence: np.ndarray,
+    title: str = "Cadence",
+    output_path: Optional[str] = None,
+    cmap: str = "inferno",
+) -> None:
+    """
+    Plot a 6-panel cadence (ON/OFF).
+    cadence: shape (6, 16, n_freq)
+    """
+    apply_light_style()
+    fig, axes = plt.subplots(6, 1, figsize=(12, 1.3 * 6), sharex=True, sharey=True)
+    fig.suptitle(title, fontweight='bold', fontsize=14)
+
+    for i, ax in enumerate(axes):
+        im = ax.imshow(cadence[i], aspect='auto', cmap=cmap, origin='upper',
+                       interpolation='nearest')
+        ax.set_ylabel(f"{'ON' if i % 2 == 0 else 'OFF'}")
+
+    axes[-1].set_xlabel("Frequency (channels)")
+    fig.colorbar(im, ax=axes, shrink=0.75, pad=0.02, label='Intensity')
+
+    plt.subplots_adjust(hspace=0, wspace=0)
+    
+    if output_path:
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
+    plt.close(fig)
+
+
 def plot_candidate(
     spec: np.ndarray,
     prob: float,
@@ -98,20 +222,13 @@ def plot_candidate(
 ) -> None:
     """
     Save a spectrogram plot for an ETI candidate.
-
-    Args:
-        spec: Spectrogram of shape (96, 1024), normalized.
-        prob: P(ETI) from the model.
-        center_channel: Center channel index.
-        freq_mhz: Center frequency in MHz (0 if unknown).
-        output_path: Path to save the plot.
     """
+    apply_light_style()
     fig, ax = plt.subplots(1, 1, figsize=(15, 5))
 
     im = ax.imshow(spec, aspect='auto', cmap='inferno', origin='upper',
-                     interpolation='nearest')
+                   interpolation='nearest')
 
-    # Title with probability and frequency
     freq_str = f" — {freq_mhz:.2f} MHz" if freq_mhz > 0 else ""
     ax.set_title(
         f"ETI Candidate  |  P(ETI) = {prob:.4f}  |  "
@@ -123,57 +240,51 @@ def plot_candidate(
     fig.colorbar(im, ax=ax, orientation='vertical', fraction=0.046,
                  pad=0.04, label="Intensity")
 
-    # ON/OFF boundary lines
     for i in range(1, 6):
         ax.axhline(i * 16 - 0.5, color='white', lw=0.5, ls='--', alpha=0.5)
 
     plt.tight_layout()
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
     plt.close(fig)
 
 
 def plot_attention_map(
     spec: np.ndarray,
     attn_weights: np.ndarray,
-    prob: float,
-    center_channel: int,
-    freq_mhz: float,
-    output_path: str,
+    prob: float = 0.0,
+    center_channel: int = 0,
+    freq_mhz: float = 0.0,
+    output_path: Optional[str] = None,
     f_grid: int = 64,
     t_grid: int = 6,
+    custom_title: Optional[str] = None,
 ) -> None:
     """
     Save a spectrogram with attention map overlay.
-
-    Args:
-        spec: Spectrogram of shape (96, 1024), normalized.
-        attn_weights: Attention array of shape (num_patches,), [0, 1].
-        prob: P(ETI) from the model.
-        center_channel: Center channel index.
-        freq_mhz: Center frequency in MHz (0 if unknown).
-        output_path: Path to save the plot.
-        f_grid: Number of patches in the frequency dimension.
-        t_grid: Number of patches in the time dimension.
     """
+    apply_light_style()
     # 1. Reshape attention to patch grid and upsample
     grid = attn_weights.reshape(f_grid, t_grid)
     grid_img = Image.fromarray(grid.astype(np.float32))
     grid_upsampled = np.array(
-        grid_img.resize((96, 1024), resample=Image.BILINEAR)
+        grid_img.resize((96, 1024), resample=Image.NEAREST)
     )
     grid_upsampled = grid_upsampled.T  # (96, 1024)
 
     # 2. Plot
     fig, axes = plt.subplots(2, 1, figsize=(15, 10), sharex=True)
 
-    freq_str = f" — {freq_mhz:.2f} MHz" if freq_mhz > 0 else ""
-    title = (f"P(ETI) = {prob:.4f}  |  "
-             f"Channel {center_channel}{freq_str}")
+    if custom_title:
+        title = custom_title
+    else:
+        freq_str = f" — {freq_mhz:.2f} MHz" if freq_mhz > 0 else ""
+        title = (f"P(ETI) = {prob:.4f}  |  "
+                 f"Channel {center_channel}{freq_str}")
 
     # Top: Original spectrogram
     im0 = axes[0].imshow(spec, aspect='auto', cmap='inferno', origin='upper',
-                          interpolation='nearest')
+                         interpolation='nearest')
     axes[0].set_title(f"Original Spectrogram  |  {title}", fontweight='bold')
     axes[0].set_ylabel("Time (bins)")
     fig.colorbar(im0, ax=axes[0], orientation='vertical', fraction=0.046,
@@ -181,9 +292,9 @@ def plot_attention_map(
 
     # Bottom: Spectrogram + attention overlay
     axes[1].imshow(spec, aspect='auto', cmap='gray', origin='upper', alpha=0.8,
-                     interpolation='nearest')
+                   interpolation='nearest')
     im1 = axes[1].imshow(grid_upsampled, aspect='auto', cmap='jet',
-                          origin='upper', alpha=0.5, interpolation='bilinear')
+                         origin='upper', alpha=0.5, interpolation='nearest')
     axes[1].set_title("Attention Map Overlay (Last Block)", fontweight='bold')
     axes[1].set_ylabel("Time (bins)")
     axes[1].set_xlabel("Frequency (channels)")
@@ -198,5 +309,254 @@ def plot_attention_map(
 
     plt.tight_layout()
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches='tight')
+    plt.savefig(output_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
+    plt.close(fig)
+
+
+# ------------------------------------------------------------------ #
+#  Evaluation / Metrics Plots
+# ------------------------------------------------------------------ #
+
+def plot_threshold_sweep(sweep: Dict[str, Any], save_path: str) -> None:
+    """
+    Plot F1 / Precision / Recall vs threshold, plus the PR curve.
+    """
+    apply_light_style()
+    thresholds = np.array(sweep['thresholds'])
+    f1s        = np.array(sweep['f1_scores'])
+    precs      = np.array(sweep['precisions'])
+    recs       = np.array(sweep['recalls'])
+    opt_t      = sweep['optimal_threshold']
+    opt_f1     = sweep['best_f1']
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle('RST — Threshold Analysis', fontsize=14, fontweight='bold')
+
+    # ── Panel 1: metrics vs threshold ──────────────────────────────────────
+    ax = axes[0]
+    ax.plot(thresholds, f1s,   color='#2196F3', lw=2,   label='F1-score')
+    ax.plot(thresholds, precs, color='#4CAF50', lw=1.5, label='Precision', ls='--')
+    ax.plot(thresholds, recs,  color='#FF5722', lw=1.5, label='Recall',    ls=':')
+    ax.axvline(opt_t, color='#FFC107', lw=1.5, ls='--',
+               label=f'Optimal t={opt_t:.3f}  (F1={opt_f1:.4f})')
+    ax.scatter([opt_t], [opt_f1], color='#FFC107', zorder=5, s=80)
+    ax.set_xlabel('Threshold', fontsize=11)
+    ax.set_ylabel('Score', fontsize=11)
+    ax.set_title('Metrics vs Threshold', fontsize=12)
+    ax.legend(fontsize=9)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0.5, 1.01)
+    ax.grid(alpha=0.3)
+
+    # ── Panel 2: Precision-Recall curve ────────────────────────────────────
+    ax2 = axes[1]
+    ax2.plot(recs, precs, color='#9C27B0', lw=2)
+    # Mark the optimal operating point
+    opt_idx = int(np.argmin(np.abs(thresholds - opt_t)))
+    ax2.scatter([recs[opt_idx]], [precs[opt_idx]], color='#FFC107',
+                zorder=5, s=80, label=f't={opt_t:.3f}')
+    ax2.set_xlabel('Recall', fontsize=11)
+    ax2.set_ylabel('Precision', fontsize=11)
+    ax2.set_title('Precision-Recall Curve', fontsize=12)
+    ax2.legend(fontsize=9)
+    ax2.set_xlim(0, 1)
+    ax2.set_ylim(0, 1.01)
+    ax2.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=DPI, bbox_inches='tight', facecolor=BG_COLOR)
+    plt.close(fig)
+
+
+# ------------------------------------------------------------------ #
+#  Distribution Plots
+# ------------------------------------------------------------------ #
+
+def plot_prob_distribution(
+    df: pd.DataFrame,
+    threshold: float,
+    bins: int,
+    log_scale: bool,
+    output_path: Path,
+) -> None:
+    """Single-panel histogram of the full probability distribution."""
+    apply_light_style()
+
+    probs = df["probability"].values
+    n_rfi = (df["classification"] == "RFI").sum()
+    n_eti = (df["classification"] == "ETI").sum()
+    n_tot = len(df)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Separate distributions
+    rfi_probs = probs[probs < threshold]
+    eti_probs = probs[probs >= threshold]
+
+    bin_edges = np.linspace(0, 1, bins + 1)
+
+    ax.hist(
+        rfi_probs, bins=bin_edges,
+        color=RFI_COLOR, alpha=0.75, label=f"RFI  ({n_rfi:,})",
+        edgecolor=BG_COLOR, linewidth=0.3,
+    )
+    ax.hist(
+        eti_probs, bins=bin_edges,
+        color=ETI_COLOR, alpha=0.85, label=f"ETI  ({n_eti:,})",
+        edgecolor=BG_COLOR, linewidth=0.3,
+    )
+
+    if log_scale:
+        ax.set_yscale("log")
+
+    y_max = ax.get_ylim()[1]
+    _threshold_annotation(ax, threshold, y_max)
+
+    # Stats box
+    stats_text = (
+        f"Total snippets: {n_tot:,}\n"
+        f"ETI rate: {n_eti/n_tot*100:.3f}%\n"
+        f"Mean P(ETI): {probs.mean():.4f}\n"
+        f"Median P(ETI): {np.median(probs):.4f}"
+    )
+    ax.text(
+        0.99, 0.97, stats_text,
+        transform=ax.transAxes, fontsize=9,
+        va="top", ha="right", color=MUTED_COLOR,
+        bbox=dict(boxstyle="round,pad=0.4", facecolor=BG_COLOR,
+                  edgecolor=GRID_COLOR, alpha=0.9),
+    )
+
+    ax.set_xlabel("P(ETI signal)", fontsize=12, labelpad=8)
+    ax.set_ylabel("Number of snippets" + (" (log)" if log_scale else ""),
+                  fontsize=12, labelpad=8)
+    ax.set_title("RST — Classification Probability Distribution",
+                 fontsize=15, fontweight="bold", pad=14)
+    ax.legend(loc="upper center", fontsize=10, framealpha=0.8)
+    ax.set_xlim(0, 1)
+
+    plt.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
+    plt.close(fig)
+
+
+def plot_prob_split(
+    df: pd.DataFrame,
+    split_col: str,
+    threshold: float,
+    bins: int,
+    log_scale: bool,
+    output_path: Path,
+) -> None:
+    """One subplot per unique value of *split_col* (e.g. target or freq_band)."""
+    apply_light_style()
+
+    groups = sorted(df[split_col].unique())
+    n_groups = len(groups)
+
+    ncols = min(3, n_groups)
+    nrows = (n_groups + ncols - 1) // ncols
+
+    fig, axes = plt.subplots(
+        nrows, ncols,
+        figsize=(5.5 * ncols, 4.5 * nrows),
+        squeeze=False,
+    )
+    fig.suptitle(
+        f"RST — Probability Distribution by {split_col.replace('_', ' ').title()}",
+        fontsize=15, fontweight="bold", color=TEXT_COLOR, y=1.01,
+    )
+
+    bin_edges = np.linspace(0, 1, bins + 1)
+
+    for idx, (group, ax) in enumerate(zip(groups, axes.flat)):
+        sub = df[df[split_col] == group]
+        probs = sub["probability"].values
+        n_rfi = (sub["classification"] == "RFI").sum()
+        n_eti = (sub["classification"] == "ETI").sum()
+
+        rfi_p = probs[probs < threshold]
+        eti_p = probs[probs >= threshold]
+
+        ax.hist(rfi_p, bins=bin_edges, color=RFI_COLOR, alpha=0.75,
+                label=f"RFI ({n_rfi:,})", edgecolor=BG_COLOR, linewidth=0.3)
+        ax.hist(eti_p, bins=bin_edges, color=ETI_COLOR, alpha=0.85,
+                label=f"ETI ({n_eti:,})", edgecolor=BG_COLOR, linewidth=0.3)
+
+        if log_scale:
+            ax.set_yscale("log")
+
+        ax.axvline(threshold, color=THRESH_COLOR, linewidth=1.2,
+                   linestyle="--", alpha=0.9)
+
+        ax.set_title(str(group), fontsize=11, fontweight="bold", pad=6)
+        ax.set_xlabel("P(ETI)", fontsize=9)
+        ax.set_ylabel("Count" + (" (log)" if log_scale else ""), fontsize=9)
+        ax.set_xlim(0, 1)
+        ax.legend(fontsize=8, framealpha=0.8)
+
+        eti_rate = n_eti / max(len(sub), 1) * 100
+        ax.text(
+            0.98, 0.97,
+            f"n={len(sub):,}\nETI: {eti_rate:.3f}%",
+            transform=ax.transAxes, fontsize=8, va="top", ha="right",
+            color=MUTED_COLOR,
+            bbox=dict(boxstyle="round,pad=0.3", facecolor=BG_COLOR,
+                      edgecolor=GRID_COLOR, alpha=0.85),
+        )
+
+    # Hide unused subplots
+    for ax in axes.flat[n_groups:]:
+        ax.set_visible(False)
+
+    plt.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
+    plt.close(fig)
+
+
+def plot_prob_ccdf(
+    df: pd.DataFrame,
+    threshold: float,
+    output_path: Path,
+) -> None:
+    """
+    CCDF (1 - CDF) of probabilities — shows how many snippets exceed a
+    given threshold, useful for choosing the operating point.
+    """
+    apply_light_style()
+
+    probs = np.sort(df["probability"].values)
+    ccdf  = 1.0 - np.arange(1, len(probs) + 1) / len(probs)
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+
+    ax.plot(probs, ccdf, color=ETI_COLOR, linewidth=2, label="CCDF  P(p ≥ x)")
+    ax.fill_between(probs, ccdf, alpha=0.15, color=ETI_COLOR)
+
+    # Mark the current threshold
+    idx = np.searchsorted(probs, threshold)
+    frac_above = ccdf[min(idx, len(ccdf) - 1)]
+    ax.axvline(threshold, color=THRESH_COLOR, linewidth=1.5,
+               linestyle="--", alpha=0.9)
+    ax.axhline(frac_above, color=THRESH_COLOR, linewidth=1.0,
+               linestyle=":", alpha=0.7)
+    ax.scatter([threshold], [frac_above], color=THRESH_COLOR, s=60, zorder=6)
+    ax.text(
+        threshold + 0.015, frac_above + 0.015,
+        f"({threshold:.2f}, {frac_above:.4f})\n"
+        f"{frac_above*100:.3f}% of snippets above",
+        color=THRESH_COLOR, fontsize=9,
+        path_effects=[pe.withStroke(linewidth=2, foreground=PANEL_COLOR)],
+    )
+
+    ax.set_yscale("log")
+    ax.set_xlabel("P(ETI signal)", fontsize=12, labelpad=8)
+    ax.set_ylabel("Fraction of snippets ≥ x  (log)", fontsize=12, labelpad=8)
+    ax.set_title("RST — Complementary CDF of Classification Probabilities",
+                 fontsize=14, fontweight="bold", pad=12)
+    ax.set_xlim(0, 1)
+    ax.legend(fontsize=10, framealpha=0.8)
+
+    plt.tight_layout()
+    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
     plt.close(fig)
