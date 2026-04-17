@@ -57,7 +57,7 @@ def evaluate(
         specs = specs.to(device)
         
         # Forward pass
-        with torch.amp.autocast('cuda'):
+        with torch.amp.autocast(device.type):
             logits = model(specs)
             probs = torch.sigmoid(logits)
 

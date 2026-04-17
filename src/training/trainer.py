@@ -366,7 +366,7 @@ def _train_one_epoch(
         labels = labels.to(device)  # (batch, 1)
 
         # Forward pass in mixed precision
-        with autocast('cuda'):
+        with autocast(device.type):
             output = model(specs)
             loss = loss_fn(output, labels)
 
@@ -422,7 +422,7 @@ def _validate(
         specs = specs.to(device)
         labels = labels.to(device)
 
-        with autocast('cuda'):
+        with autocast(device.type):
             output = model(specs)
             loss = loss_fn(output, labels)
 
@@ -487,6 +487,6 @@ def weight_average(
 
     # Divide by the number of checkpoints
     for key in avg_state:
-        avg_state[key] = avg_state[key] / float(n_last)
+        avg_state[key] = (avg_state[key] / float(n_last)).to(avg_state[key].dtype)
 
     return avg_state
