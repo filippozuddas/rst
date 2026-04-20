@@ -359,7 +359,7 @@ def plot_attention_map(
     grid = attn_weights.reshape(f_grid, t_grid)
     grid_img = Image.fromarray(grid.astype(np.float32))
     grid_upsampled = np.array(
-        grid_img.resize((96, 1024), resample=Image.NEAREST)
+        grid_img.resize((96, 1024), resample=Image.BILINEAR)
     )
     grid_upsampled = grid_upsampled.T  # (96, 1024)
 
@@ -385,7 +385,7 @@ def plot_attention_map(
     axes[1].imshow(spec, aspect='auto', cmap='gray', origin='upper', alpha=0.8,
                    interpolation='nearest')
     im1 = axes[1].imshow(grid_upsampled, aspect='auto', cmap='jet',
-                         origin='upper', alpha=0.5, interpolation='nearest')
+                         origin='upper', alpha=0.5, interpolation='bilinear')
     axes[1].set_title("Attention Map Overlay (Last Block)", fontweight='bold')
     axes[1].set_ylabel("Time (bins)")
     axes[1].set_xlabel("Frequency (channels)")
