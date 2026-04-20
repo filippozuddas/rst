@@ -132,7 +132,7 @@ def main():
     train_cfg['_full_config'] = config
 
     history = train(
-        model=actual_model,
+        model=model,  # <-- BUG FIX: We must pass the DataParallel-wrapped model, not actual_model!
         train_loader=train_loader,
         val_loader=val_loader,
         config=train_cfg,

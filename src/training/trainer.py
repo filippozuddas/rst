@@ -24,6 +24,7 @@ import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
 # Mixed precision:
 # autocast() runs computations in FP16 (half memory)
@@ -158,24 +159,28 @@ def train(
         print(f'  LR: {lr}, Epochs: {epochs}, Layers: {layers}')
         print(f'{"="*60}')
 
+        # Extract the underlying model to call its custom methods (unfreeze, etc.)
+        # as DataParallel does not expose them.
+        actual_model = model.module if hasattr(model, 'module') else model
+
         # Freeze/unfreeze the appropriate layers
         if layers == 'head':
-            model.freeze_backbone()
+            actual_model.freeze_backbone()
         elif layers == 'last_4_blocks':
-            model.unfreeze_last_n_blocks(4)
+            actual_model.unfreeze_last_n_blocks(4)
         elif layers == 'all':
-            model.unfreeze_all()
+            actual_model.unfreeze_all()
         else:
             raise ValueError(f'Unknown layers: {layers}')
 
-        trainable = model.get_trainable_params_count()
+        trainable = actual_model.get_trainable_params_count()
         total = sum(p.numel() for p in model.parameters())
         print(f'  Trainable params: {trainable:,} / {total:,} '
               f'({100 * trainable / total:.1f}%)')
 
         # Create the optimizer for this phase
         # Recreated per phase because trainable parameters may change.
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             filter(lambda p: p.requires_grad, model.parameters()),
             lr=lr,
             weight_decay=1e-4,       # Increased regularization (was 5e-7)
@@ -252,12 +257,15 @@ def train(
             batch_scheduler = scheduler if scheduler_name == 'onecycle' else None
             train_loss = _train_one_epoch(
                 model, train_loader, loss_fn, optimizer, scaler,
-                gradient_clip, device, batch_scheduler=batch_scheduler,
+                gradient_clip, device, 
+                epoch_idx=global_epoch,
+                batch_scheduler=batch_scheduler,
             )
 
             # --- Validation ---
             val_loss, val_acc, val_auc, val_f1 = _validate(
                 model, val_loader, loss_fn, device,
+                epoch_idx=global_epoch,
             )
 
             # Step the scheduler (OneCycleLR steps per batch, handled in _train_one_epoch)
@@ -348,6 +356,7 @@ def _train_one_epoch(
     scaler: GradScaler,
     gradient_clip: float,
     device: torch.device,
+    epoch_idx: int = 0,
     batch_scheduler=None,
 ) -> float:
     """
@@ -361,7 +370,8 @@ def _train_one_epoch(
     total_loss = 0.0
     n_batches = 0
 
-    for specs, labels in train_loader:
+    pbar = tqdm(train_loader, desc=f"Epoch {epoch_idx:3d} [Train]", leave=False)
+    for specs, labels in pbar:
         specs = specs.to(device)    # (batch, 96, 1024)
         labels = labels.to(device)  # (batch, 1)
 
@@ -391,6 +401,8 @@ def _train_one_epoch(
 
         total_loss += loss.item()
         n_batches += 1
+        
+        pbar.set_postfix(loss=loss.item())
 
     return total_loss / max(n_batches, 1)
 
@@ -401,6 +413,7 @@ def _validate(
     val_loader: DataLoader,
     loss_fn: nn.Module,
     device: torch.device,
+    epoch_idx: int = 0,
 ) -> Tuple[float, float, float, float]:
     """
     Evaluate the model on the validation set.
@@ -418,7 +431,8 @@ def _validate(
     total_loss = 0.0
     n_batches = 0
 
-    for specs, labels in val_loader:
+    pbar = tqdm(val_loader, desc=f"Epoch {epoch_idx:3d} [Val  ]", leave=False)
+    for specs, labels in pbar:
         specs = specs.to(device)
         labels = labels.to(device)
 

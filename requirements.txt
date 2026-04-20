@@ -19,6 +19,7 @@ setigen>=2.3.0
 # Metrics & visualization
 scikit-learn>=1.2.0
 matplotlib>=3.7.0
+tqdm>=4.65.0
 
 # Configuration
 pyyaml>=6.0
