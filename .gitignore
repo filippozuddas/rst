@@ -34,5 +34,4 @@ wandb/
 GEMINI.md
 *.mp4
 
-results/**/cadence_results.csv
-results/**/results_summary.csv
+results/**/*.csv
