@@ -28,8 +28,8 @@ import warnings
 # Users can extend this by passing custom band_config to DatasetBuilder.
 DEFAULT_BAND_CONFIG = {
     '6GHz': {
-        'name': 'C-band (~6.8 GHz)',
-        'f_min': 6000,
+        'name': 'C-band (4-8 GHz)',
+        'f_min': 4000,
         'f_max': 8000,
     },
     '18GHz': {
