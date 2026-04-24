@@ -285,12 +285,21 @@ class DatasetBuilder:
         cadence_data = []
         for i, filepath in enumerate(cadence.files):
             print(f"\n    Loading file {i+1}/6: {filepath.name}...", end=" ", flush=True)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                wf = Waterfall(str(filepath))
-            data = wf.data.squeeze()
-            cadence_data.append(data)
-            print(f"✓ ({data.shape})")
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    wf = Waterfall(str(filepath))
+                data = wf.data.squeeze()
+                cadence_data.append(data)
+                print(f"✓ ({data.shape})")
+            except OSError as e:
+                print(f"❌ FAILED")
+                if "truncated file" in str(e).lower():
+                    raise OSError(f"File is truncated or corrupt: {filepath}") from e
+                raise OSError(f"Could not open HDF5 file {filepath}: {e}") from e
+            except Exception as e:
+                print(f"❌ ERROR")
+                raise RuntimeError(f"Unexpected error loading {filepath}: {e}") from e
 
         cadence_array = np.stack(cadence_data, axis=0)
         n_freq = cadence_array.shape[2]

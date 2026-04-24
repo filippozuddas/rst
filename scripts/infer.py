@@ -71,19 +71,28 @@ def load_cadence_from_files(file_paths: list) -> tuple:
     for i, fpath in enumerate(file_paths):
         print(f"  Loading file {i+1}/6: {Path(fpath).name}...", end=" ",
               flush=True)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            wf = Waterfall(str(fpath))
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                wf = Waterfall(str(fpath))
 
-        data = wf.data.squeeze()
-        cadence_data.append(data)
+            data = wf.data.squeeze()
+            cadence_data.append(data)
 
-        # Get frequency info from the first file
-        if i == 0:
-            freq_start_mhz = wf.header.get('fch1', 0.0)
-            freq_resolution_mhz = abs(wf.header.get('foff', 0.0))
+            # Get frequency info from the first file
+            if i == 0:
+                freq_start_mhz = wf.header.get('fch1', 0.0)
+                freq_resolution_mhz = abs(wf.header.get('foff', 0.0))
 
-        print(f"✓ ({data.shape})")
+            print(f"✓ ({data.shape})")
+        except OSError as e:
+            print(f"❌ FAILED")
+            if "truncated file" in str(e).lower():
+                raise OSError(f"File is truncated or corrupt: {fpath}") from e
+            raise OSError(f"Could not open HDF5 file {fpath}: {e}") from e
+        except Exception as e:
+            print(f"❌ ERROR")
+            raise RuntimeError(f"Unexpected error loading {fpath}: {e}") from e
 
     cadence_array = np.stack(cadence_data, axis=0)
     return cadence_array, freq_start_mhz, freq_resolution_mhz, target_name
@@ -279,30 +288,34 @@ Examples:
     # ------------------------------------------------------------------ #
     if args.files:
         print(f"\n📁 Mode: Single Cadence (6 files)")
-        cadence, freq_start, freq_res, target = load_cadence_from_files(
-            args.files
-        )
+        try:
+            cadence, freq_start, freq_res, target = load_cadence_from_files(
+                args.files
+            )
 
-        cadence_dir = output_dir / target
-        cadence_dir.mkdir(parents=True, exist_ok=True)
+            cadence_dir = output_dir / target
+            cadence_dir.mkdir(parents=True, exist_ok=True)
 
-        results, clusters = process_cadence(
-            engine=engine, cadence=cadence,
-            freq_start_mhz=freq_start,
-            freq_resolution_mhz=freq_res,
-            target_name=target,
-            output_dir=cadence_dir,
-            threshold=threshold,
-            attn_threshold=attn_threshold,
-            generate_plots=not args.no_plots,
-            top_n=args.top_n,
-        )
-        if not results.empty:
-            results['target'] = target
-            all_results.append(results)
-        if not clusters.empty:
-            clusters['target'] = target
-            all_clusters.append(clusters)
+            results, clusters = process_cadence(
+                engine=engine, cadence=cadence,
+                freq_start_mhz=freq_start,
+                freq_resolution_mhz=freq_res,
+                target_name=target,
+                output_dir=cadence_dir,
+                threshold=threshold,
+                attn_threshold=attn_threshold,
+                generate_plots=not args.no_plots,
+                top_n=args.top_n,
+            )
+            if not results.empty:
+                results['target'] = target
+                all_results.append(results)
+            if not clusters.empty:
+                clusters['target'] = target
+                all_clusters.append(clusters)
+        except Exception as e:
+            print(f"\n❌ Error processing cadence: {e}")
+            sys.exit(1)
 
     # ------------------------------------------------------------------ #
     #  Mode 2: Directory scan
