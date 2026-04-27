@@ -23,3 +23,6 @@ tqdm>=4.67.0
 
 # Configuration
 pyyaml>=6.0.2
+
+# Compatibility (pkg_resources for blimpy in Python 3.12+)
+setuptools>=70.0.0

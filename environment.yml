@@ -21,3 +21,4 @@ dependencies:
     - timm==1.0.15
     - setigen
     - blimpy
+    - setuptools>=70.0.0
