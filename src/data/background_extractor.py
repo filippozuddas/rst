@@ -72,10 +72,9 @@ class CadenceInfo:
         """Check if cadence has all 6 files."""
         return len(self.files) == 6
 
-    @property
-    def n_snippets(self) -> int:
+    def get_n_snippets(self, snippet_width: int) -> int:
         """Estimated number of snippets at given width."""
-        return self.n_channels // DatasetBuilder.SNIPPET_WIDTH if self.n_channels > 0 else 0
+        return self.n_channels // snippet_width if self.n_channels > 0 else 0
 
 
 class DatasetBuilder:
@@ -88,8 +87,6 @@ class DatasetBuilder:
     Extracts RAW 1024-channel backgrounds for use with CadenceGenerator.
     Signal injection and preprocessing happen in the training pipeline.
     """
-
-    SNIPPET_WIDTH = 1024  # Frequency channels per snippet (native resolution)
 
     def __init__(self,
                  output_dir: str = "data/training",
@@ -106,7 +103,7 @@ class DatasetBuilder:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.cadences: Dict[str, CadenceInfo] = {}
         self.band_config = band_config or DEFAULT_BAND_CONFIG
-        DatasetBuilder.SNIPPET_WIDTH = snippet_width
+        self.snippet_width = snippet_width
 
     def scan_directory(self, directory: str, recursive: bool = True) -> List[Path]:
         """Scan directory for HDF5 files (.h5 and .hdf5)."""
@@ -259,13 +256,13 @@ class DatasetBuilder:
             print(f"    Unknown band: {len(unknown)} cadences")
 
         if complete:
-            total_snippets = sum(c.n_snippets for c in complete)
+            total_snippets = sum(c.get_n_snippets(self.snippet_width) for c in complete)
             print(f"\n  Total potential snippets: {total_snippets:,}")
-            print(f"  Snippet width: {self.SNIPPET_WIDTH} channels")
+            print(f"  Snippet width: {self.snippet_width} channels")
 
             print(f"\n  Sample cadences:")
             for c in complete[:5]:
-                print(f"    - {c.target_name} ({c.freq_band}): {c.n_snippets:,} snippets")
+                print(f"    - {c.target_name} ({c.freq_band}): {c.get_n_snippets(self.snippet_width):,} snippets")
             if len(complete) > 5:
                 print(f"    ... and {len(complete) - 5} more")
 
@@ -303,7 +300,7 @@ class DatasetBuilder:
 
         cadence_array = np.stack(cadence_data, axis=0)
         n_freq = cadence_array.shape[2]
-        total_snippets = n_freq // self.SNIPPET_WIDTH
+        total_snippets = n_freq // self.snippet_width
 
         if n_snippets is None:
             n_snippets = total_snippets
@@ -316,8 +313,8 @@ class DatasetBuilder:
 
         snippets = []
         for idx in indices:
-            start = idx * self.SNIPPET_WIDTH
-            end = (idx + 1) * self.SNIPPET_WIDTH
+            start = idx * self.snippet_width
+            end = (idx + 1) * self.snippet_width
             snippet = cadence_array[:, :, start:end]
             snippets.append(snippet)
 
@@ -345,14 +342,14 @@ class DatasetBuilder:
         print(f"  Cadences: {len(cadences)}")
         print(f"  Snippets per cadence: {snippets_per_cadence}")
         print(f"  Max total: {max_total_snippets}")
-        print(f"  Output shape: (N, 6, 16, {self.SNIPPET_WIDTH})")
+        print(f"  Output shape: (N, 6, 16, {self.snippet_width})")
 
         all_snippets = []
         metadata = []
 
         for cadence in tqdm(cadences, desc="Processing"):
             try:
-                n_to_extract = min(snippets_per_cadence, cadence.n_snippets)
+                n_to_extract = min(snippets_per_cadence, cadence.get_n_snippets(self.snippet_width))
                 if n_to_extract == 0:
                     continue
 
@@ -394,7 +391,7 @@ class DatasetBuilder:
                 'n_samples': len(dataset),
                 'n_cadences': len(cadences),
                 'shape': list(dataset.shape),
-                'fchans': self.SNIPPET_WIDTH,
+                'fchans': self.snippet_width,
                 'targets': list(set(m['target'] for m in metadata))
             }, f, indent=2)
 

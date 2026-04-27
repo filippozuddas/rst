@@ -79,7 +79,7 @@ def main():
         for i, cadence in enumerate(found_cadences, 1):
             target = cadence.target_name
             date = cadence.date
-            f.write(f"[{i}] Target: {target} | Date: {date} | Snippets: {cadence.n_snippets}\n")
+            f.write(f"[{i}] Target: {target} | Date: {date} | Snippets: {cadence.get_n_snippets(builder.snippet_width)}\n")
             for file in cadence.files:
                 f.write(f"    {file}\n")
             f.write("\n")
@@ -89,7 +89,7 @@ def main():
     # Optionally print a small sample
     print("\nSample cadences:")
     for c in found_cadences[:5]:
-        print(f"  - {c.target_name} ({c.date}): {c.n_snippets} potential snippets")
+        print(f"  - {c.target_name} ({c.date}): {c.get_n_snippets(builder.snippet_width)} potential snippets")
     if len(found_cadences) > 5:
         print(f"  ... and {len(found_cadences) - 5} more.")
 
