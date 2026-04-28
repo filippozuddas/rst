@@ -420,8 +420,12 @@ def main():
                         help='Max total snippets per band')
     parser.add_argument('--name', default='backgrounds',
                         help='Output dataset name prefix')
-    parser.add_argument('--band', '-b', choices=['6GHz', '18GHz', '1.4GHz', 'all'],
+    parser.add_argument('--band', '-b', choices=['6GHz', '18GHz', '1.4GHz', 'all', 'mixed'],
                         default='all', help='Frequency band to process')
+    parser.add_argument('--mix-bins', type=float, default=1000.0,
+                        help='Bin size in MHz for balancing a mixed dataset (default: 1000)')
+    parser.add_argument('--cadences-per-bin', type=int, default=10,
+                        help='Number of cadences to sample from each frequency bin when using --band mixed')
     parser.add_argument('--training-cadences', '-t', type=int, default=None,
                         help='Number of cadences for training (rest for inference)')
     parser.add_argument('--list-only', action='store_true',
@@ -444,6 +448,64 @@ def main():
     builder.print_cadence_summary()
 
     if args.list_only:
+        return
+
+    if args.band == 'mixed':
+        print(f"\n{'='*60}")
+        print("PROCESSING: MIXED MULTI-BAND DATASET")
+        print(f"{'='*60}")
+        
+        complete_cadences = [c for c in builder.cadences.values() if c.is_complete]
+        if not complete_cadences:
+            print("No complete cadences found.")
+            return
+            
+        # Group by frequency bin
+        by_freq = defaultdict(list)
+        for c in complete_cadences:
+            # e.g., 4800 -> 5000, 6100 -> 6000
+            bin_mhz = round(c.freq_start / args.mix_bins) * args.mix_bins
+            by_freq[bin_mhz].append(c)
+            
+        selected_cadences = []
+        inference_cadences = []
+        print(f"Balancing dataset across {len(by_freq)} frequency bins:")
+        for bin_mhz in sorted(by_freq.keys()):
+            cads = by_freq[bin_mhz]
+            # Take up to cadences_per_bin
+            n_take = min(args.cadences_per_bin, len(cads))
+            
+            # Use random sampling to avoid always picking the same ones if we run it multiple times
+            import random
+            selected = random.sample(cads, n_take)
+            
+            # Keep track of which ones were NOT selected, for inference testing
+            for c in cads:
+                if c not in selected:
+                    inference_cadences.append(c)
+            
+            selected_cadences.extend(selected)
+            print(f"  - ~{bin_mhz/1000:.1f} GHz: Selected {n_take}/{len(cads)} cadences for training (Left {len(cads)-n_take} for inference)")
+            
+        # Save the list of inference cadences
+        if inference_cadences:
+            inference_path = builder.output_dir / "inference_cadences_mixed.txt"
+            with open(inference_path, 'w') as f:
+                for c in inference_cadences:
+                    files_str = ','.join(str(fp) for fp in c.files)
+                    f.write(f"{c.target_name}|{c.freq_start}|{files_str}\n")
+            print(f"\n  Saved {len(inference_cadences)} held-out cadences for inference testing to: {inference_path}")
+
+        output_name = f"{args.name}_mixed"
+        builder.build_training_dataset(
+            cadences=selected_cadences,
+            snippets_per_cadence=args.snippets_per_cadence,
+            max_total_snippets=args.max_snippets,
+            output_name=output_name
+        )
+        print(f"\n{'='*60}")
+        print("COMPLETE")
+        print(f"{'='*60}")
         return
 
     bands_to_process = [args.band] if args.band != 'all' else list(builder.band_config.keys())
