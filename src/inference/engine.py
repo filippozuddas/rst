@@ -74,7 +74,7 @@ class InferenceEngine:
         )
 
         # Load checkpoint
-        state_dict = torch.load(checkpoint_path, map_location='cpu')
+        state_dict = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
         if all(k.startswith('module.') for k in state_dict.keys()):
             state_dict = {k[7:]: v for k, v in state_dict.items()}
         self.model.load_state_dict(state_dict)
