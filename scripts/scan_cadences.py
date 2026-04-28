@@ -32,6 +32,10 @@ def main():
                         help='Root directory/directories to scan')
     parser.add_argument('--output', '-o', default='cadence_scan_report.txt',
                         help='Output file to save the report (default: cadence_scan_report.txt)')
+    parser.add_argument('--export-list', '-e', default=None,
+                        help='If specified, exports a flat list of HDF5 file paths for rsync')
+    parser.add_argument('--cadences-per-bin', type=int, default=10,
+                        help='Number of cadences to select per frequency bin for the export list (default: 10)')
     
     args = parser.parse_args()
     
@@ -96,6 +100,25 @@ def main():
     print("\nSommario Frequenze:")
     for freq_bin in sorted_bins:
         print(f"  ~{format_freq(freq_bin)}: {len(by_freq[freq_bin])} cadenze")
+
+    # Export transfer list if requested
+    if args.export_list:
+        import random
+        selected_files = []
+        for freq_bin in sorted_bins:
+            cads = by_freq[freq_bin]
+            n_take = min(args.cadences_per_bin, len(cads))
+            selected = random.sample(cads, n_take)
+            for c in selected:
+                for file_path in c.files:
+                    selected_files.append(str(file_path))
+                    
+        with open(args.export_list, 'w') as f:
+            for filepath in selected_files:
+                f.write(f"{filepath}\n")
+        print(f"\n✅ Lista di trasferimento per rsync salvata in: {args.export_list}")
+        print(f"   Contiene {len(selected_files)} file (da {len(selected_files)//6} cadenze bilanciate).")
+        print("   Esempio d'uso: rsync -avP -e \"ssh -J unica02@setigw.srt.inaf.it,bl@dorian,obs@192.168.100.60\" --files-from={} obs@blc00:/ /path/destinazione/".format(args.export_list))
 
 if __name__ == '__main__':
     main()
