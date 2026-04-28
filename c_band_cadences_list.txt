@@ -1,0 +1,899 @@
+# C-Band (4-8 GHz) Cadences Found in /datax/users/obs/
+# Total: 112
+
+[1] Target: TIC127425841 | Date: 20210603 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_27942_072773_TIC127425841_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_28272_074616_TIC127425841_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_28601_076459_TIC127425841_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_28928_078285_TIC127425841_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_29272_080207_TIC127425841_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_29597_082021_TIC127425841_OFF_0001.0000.h5
+
+[2] Target: TIC186599508 | Date: 20210603 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_29927_083865_TIC186599508_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_30251_085679_TIC186599508_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_30576_087494_TIC186599508_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_30900_089303_TIC186599508_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_31224_091112_TIC186599508_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_31544_092905_TIC186599508_OFF_0001.0000.h5
+
+[3] Target: TIC432549364 | Date: 20210603 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_25918_061463_TIC432549364_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_26263_063391_TIC432549364_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_26605_065306_TIC432549364_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_26944_067199_TIC432549364_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_27280_069076_TIC432549364_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_27614_070941_TIC432549364_OFF_0001.0000.h5
+
+[4] Target: TIC9348006 | Date: 20210603 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_31868_094715_TIC9348006_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_32194_096535_TIC9348006_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_32517_098339_TIC9348006_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_32841_100148_TIC9348006_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_33162_101946_TIC9348006_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_33485_103750_TIC9348006_OFF_0001.0000.h5
+
+[5] Target: TIC82452140 | Date: 20210603 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_33807_105548_TIC82452140_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_34132_107363_TIC82452140_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_34455_109166_TIC82452140_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_34778_110976_TIC82452140_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_35099_112769_TIC82452140_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210603/blc00_guppi_59368_35421_114566_TIC82452140_OFF_0001.0000.h5
+
+[6] Target: TIC367630162 | Date: 20210620 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_40907_778224_TIC367630162_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_41219_779966_TIC367630162_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_41532_781714_TIC367630162_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_41843_783456_TIC367630162_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_42155_785198_TIC367630162_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_42467_786940_TIC367630162_OFF_0001.0000.h5
+
+[7] Target: TIC427730490 | Date: 20210620 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_42798_788789_TIC427730490_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_43110_790531_TIC427730490_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_43421_792273_TIC427730490_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_43734_794021_TIC427730490_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_44046_795763_TIC427730490_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210620/blc00_guppi_59385_44358_797510_TIC427730490_OFF_0001.0000.h5
+
+[8] Target: TIC194203348 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_22540_192144_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_22883_194060_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_23227_195982_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_23569_197892_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_23936_199942_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_24273_201830_TIC194203348_OFF_0001.0000.h5
+
+[9] Target: TIC190998418 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_25073_206300_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_25404_208149_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_25761_210143_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_26090_211980_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_26418_213812_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_26744_215638_TIC190998418_OFF_0001.0000.h5
+
+[10] Target: TIC156724719 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_30446_011524_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_31240_015960_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_31557_017731_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_31872_019495_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_32188_021260_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_32505_023030_TIC156724719_OFF_0001.0000.h5
+
+[11] Target: TIC9392421 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_32826_024822_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_33145_026609_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_33461_028374_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_33777_030138_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_34093_031903_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_34408_033662_TIC9392421_OFF_0001.0000.h5
+
+[12] Target: TIC356158613 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_34726_035444_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_35042_037208_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_35359_038978_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_35675_040742_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_35990_042507_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_36305_044266_TIC356158613_OFF_0001.0000.h5
+
+[13] Target: TIC333473672 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_36622_046036_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_36938_047801_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_37254_049566_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_37568_051325_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_37999_053733_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_38313_055487_TIC333473672_OFF_0001.0000.h5
+
+[14] Target: TIC125442121 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_38630_057257_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_38943_059004_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_39260_060775_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_39572_062523_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_39886_064276_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_40201_066035_TIC125442121_OFF_0001.0000.h5
+
+[15] Target: TIC176899385 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_40507_067743_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_40821_069502_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_41134_071250_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_41447_072998_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_41759_074740_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_42072_076488_TIC176899385_OFF_0001.0000.h5
+
+[16] Target: TIC174041208 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_42382_078224_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_42696_079978_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_43007_081714_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_43320_083462_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_43630_085199_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_43943_086946_TIC174041208_OFF_0001.0000.h5
+
+[17] Target: TIC176860064 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_44252_088672_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_44563_090409_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_44875_092151_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_45186_093893_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_45497_095629_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_45808_097366_TIC176860064_OFF_0001.0000.h5
+
+[18] Target: TIC174302697 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_46118_099097_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_46428_100833_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_46739_102570_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_47050_104306_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_47361_106044_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_47670_107774_TIC174302697_OFF_0001.0000.h5
+
+[19] Target: TIC252636888 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_47976_109483_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_48290_111236_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_48601_112973_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_48911_114709_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_49221_116440_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_49532_118177_TIC252636888_OFF_0001.0000.h5
+
+[20] Target: TIC345143460 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_49836_119874_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_50150_121632_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_50460_123364_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_50771_125100_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_51081_126831_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_51392_128568_TIC345143460_OFF_0001.0000.h5
+
+[21] Target: TIC378291076 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_51698_130282_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_52010_132024_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_52321_133761_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_52631_135492_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_52941_137228_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_53251_138959_TIC378291076_OFF_0001.0000.h5
+
+[22] Target: TIC366074069 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_53559_140679_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_53869_142410_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_54180_144147_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_54489_145877_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_54800_147614_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_55111_149350_TIC366074069_OFF_0001.0000.h5
+
+[23] Target: TIC317507345 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_55419_151070_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_55729_152806_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_56039_154538_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_56351_156280_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_56660_158010_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_56971_159747_TIC317507345_OFF_0001.0000.h5
+
+[24] Target: TIC264678534 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_57278_161461_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_57591_163209_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_57904_164957_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_58214_166693_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_58526_168435_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_58838_170177_TIC264678534_OFF_0001.0000.h5
+
+[25] Target: TIC470159478 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_59154_171942_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_59464_173678_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_59777_175426_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_60089_177168_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_60719_180691_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_61032_182439_TIC470159478_OFF_0001.0000.h5
+
+[26] Target: TIC160162987 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_61342_184170_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_61654_185913_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_61967_187661_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_62280_189413_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_62594_191167_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_62907_192915_TIC160162987_OFF_0001.0000.h5
+
+[27] Target: TIC154872375 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_63221_194668_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_63535_196422_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_63848_198175_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_64162_199928_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_64477_201687_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_64790_203435_TIC154872375_OFF_0001.0000.h5
+
+[28] Target: TIC154867950 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_65103_205188_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_65419_206953_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_65734_208712_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_66048_210465_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_66362_212224_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_66677_213983_TIC154867950_OFF_0001.0000.h5
+
+[29] Target: TIC328933398 | Date: 20210613 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_66992_215742_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_67308_217506_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_67623_219265_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_67937_221024_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_68251_222778_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210613/blc00_guppi_59378_68565_224531_TIC328933398_OFF_0001.0000.h5
+
+[30] Target: TIC470852531 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_49009_035669_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_49321_037412_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_49630_039143_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_49942_040885_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_50253_042621_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_50565_044363_TIC470852531_OFF_0001.0000.h5
+
+[31] Target: TIC265460043 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_50872_046083_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_51184_047825_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_51499_049584_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_51809_051315_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_52119_053051_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_52431_054793_TIC265460043_OFF_0001.0000.h5
+
+[32] Target: TIC367858035 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_52739_056513_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_53050_058250_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_53360_059986_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_53671_061723_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_53983_063465_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_54294_065202_TIC367858035_OFF_0001.0000.h5
+
+[33] Target: TIC428988981 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_54600_066910_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_54912_068658_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_55223_070395_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_55534_072131_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_55845_073867_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_56155_075604_TIC428988981_OFF_0001.0000.h5
+
+[34] Target: TIC154741689 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_56465_077335_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_56778_079083_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_57089_080819_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_57401_082567_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_57714_084315_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_58026_086057_TIC154741689_OFF_0001.0000.h5
+
+[35] Target: TIC268334473 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_58336_087787_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_58646_089524_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_58959_091272_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_59270_093009_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_59583_094756_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_59898_096515_TIC268334473_OFF_0001.0000.h5
+
+[36] Target: TIC160077104 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_60208_098252_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_60520_099994_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_60833_101742_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_61541_105696_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_61854_107449_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_62167_109197_TIC160077104_OFF_0001.0000.h5
+
+[37] Target: TIC459903429 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_62481_110950_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_62795_112704_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_63109_114463_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_63422_116211_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_63737_117969_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_64139_120216_TIC459903429_OFF_0001.0000.h5
+
+[38] Target: TIC268403451 | Date: 20210610 | Snippets: 65536
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_64453_121969_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_64765_123716_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_65613_128450_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_66446_133105_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_66762_134875_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/lmanunza/output_turbo_seti/20210610/blc00_guppi_59375_67079_136645_TIC268403451_OFF_0001.0000.h5
+
+[39] Target: TIC317507345 | Date: 31750734 | Snippets: 65536
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_55419_151070_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_55729_152806_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_56039_154538_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_56351_156280_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_56660_158010_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/16_06_21_K/TIC317507345/blc00_guppi_59378_56971_159747_TIC317507345_OFF_0001.0000.h5
+
+[40] Target: TIC317507345 | Date: 31750734 | Snippets: 65536
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_55419_151070_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_55729_152806_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_56039_154538_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_56351_156280_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_56660_158010_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/avendrame/backup/16_06_21_K/TIC317507345/blc00_guppi_59378_56971_159747_TIC317507345_OFF_0001.0000.h5
+
+[41] Target: TIC174302697 | Date: 17430269 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_46118_099097_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_46428_100833_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_46739_102570_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_47050_104306_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_47361_106044_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174302697/blc00_guppi_59378_47670_107774_TIC174302697_OFF_0001.0000.h5
+
+[42] Target: TIC190998418 | Date: 19099841 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_25073_206300_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_25404_208149_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_25761_210143_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_26090_211980_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_26418_213812_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC190998418/blc00_guppi_59378_26744_215638_TIC190998418_OFF_0001.0000.h5
+
+[43] Target: TIC160162987 | Date: 16016298 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_61342_184170_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_61654_185913_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_61967_187661_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_62280_189413_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_62594_191167_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC160162987/blc00_guppi_59378_62907_192915_TIC160162987_OFF_0001.0000.h5
+
+[44] Target: TIC154872375 | Date: 15487237 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_63221_194668_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_63535_196422_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_63848_198175_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_64162_199928_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_64477_201687_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154872375/blc00_guppi_59378_64790_203435_TIC154872375_OFF_0001.0000.h5
+
+[45] Target: TIC154867950 | Date: 15486795 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_65103_205188_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_65419_206953_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_65734_208712_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_66048_210465_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_66362_212224_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC154867950/blc00_guppi_59378_66677_213983_TIC154867950_OFF_0001.0000.h5
+
+[46] Target: TIC378291076 | Date: 37829107 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_51698_130282_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_52010_132024_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_52321_133761_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_52631_135492_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_52941_137228_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC378291076/blc00_guppi_59378_53251_138959_TIC378291076_OFF_0001.0000.h5
+
+[47] Target: TIC317507345 | Date: 31750734 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_55419_151070_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_55729_152806_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_56039_154538_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_56351_156280_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_56660_158010_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC317507345/blc00_guppi_59378_56971_159747_TIC317507345_OFF_0001.0000.h5
+
+[48] Target: TIC264678534 | Date: 26467853 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_57278_161461_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_57591_163209_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_57904_164957_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_58214_166693_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_58526_168435_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC264678534/blc00_guppi_59378_58838_170177_TIC264678534_OFF_0001.0000.h5
+
+[49] Target: TIC328933398 | Date: 32893339 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_66992_215742_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_67308_217506_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_67623_219265_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_67937_221024_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_68251_222778_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC328933398/blc00_guppi_59378_68565_224531_TIC328933398_OFF_0001.0000.h5
+
+[50] Target: TIC176899385 | Date: 17689938 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_40507_067743_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_40821_069502_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_41134_071250_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_41447_072998_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_41759_074740_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176899385/blc00_guppi_59378_42072_076488_TIC176899385_OFF_0001.0000.h5
+
+[51] Target: TIC252636888 | Date: 25263688 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_47976_109483_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_48290_111236_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_48601_112973_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_48911_114709_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_49221_116440_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC252636888/blc00_guppi_59378_49532_118177_TIC252636888_OFF_0001.0000.h5
+
+[52] Target: TIC345143460 | Date: 34514346 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_49836_119874_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_50150_121632_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_50460_123364_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_50771_125100_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_51081_126831_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC345143460/blc00_guppi_59378_51392_128568_TIC345143460_OFF_0001.0000.h5
+
+[53] Target: TIC156724719 | Date: 15672471 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_30446_011524_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_31240_015960_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_31557_017731_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_31872_019495_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_32188_021260_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC156724719/blc00_guppi_59378_32505_023030_TIC156724719_OFF_0001.0000.h5
+
+[54] Target: TIC470159478 | Date: 47015947 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_59154_171942_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_59464_173678_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_59777_175426_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_60089_177168_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_60719_180691_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC470159478/blc00_guppi_59378_61032_182439_TIC470159478_OFF_0001.0000.h5
+
+[55] Target: TIC9392421 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_32826_024822_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_33145_026609_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_33461_028374_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_33777_030138_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_34093_031903_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC9392421/blc00_guppi_59378_34408_033662_TIC9392421_OFF_0001.0000.h5
+
+[56] Target: TIC333473672 | Date: 33347367 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_36622_046036_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_36938_047801_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_37254_049566_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_37568_051325_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_37999_053733_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC333473672/blc00_guppi_59378_38313_055487_TIC333473672_OFF_0001.0000.h5
+
+[57] Target: TIC125442121 | Date: 12544212 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_38630_057257_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_38943_059004_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_39260_060775_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_39572_062523_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_39886_064276_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC125442121/blc00_guppi_59378_40201_066035_TIC125442121_OFF_0001.0000.h5
+
+[58] Target: TIC174041208 | Date: 17404120 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_42382_078224_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_42696_079978_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_43007_081714_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_43320_083462_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_43630_085199_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC174041208/blc00_guppi_59378_43943_086946_TIC174041208_OFF_0001.0000.h5
+
+[59] Target: TIC176860064 | Date: 17686006 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_44252_088672_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_44563_090409_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_44875_092151_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_45186_093893_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_45497_095629_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC176860064/blc00_guppi_59378_45808_097366_TIC176860064_OFF_0001.0000.h5
+
+[60] Target: TIC366074069 | Date: 36607406 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_53559_140679_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_53869_142410_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_54180_144147_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_54489_145877_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_54800_147614_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC366074069/blc00_guppi_59378_55111_149350_TIC366074069_OFF_0001.0000.h5
+
+[61] Target: TIC194203348 | Date: 19420334 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_22540_192144_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_22883_194060_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_23227_195982_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_23569_197892_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_23936_199942_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC194203348/blc00_guppi_59378_24273_201830_TIC194203348_OFF_0001.0000.h5
+
+[62] Target: TIC356158613 | Date: 35615861 | Snippets: 65536
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_34726_035444_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_35042_037208_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_35359_038978_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_35675_040742_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_35990_042507_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/tess_data/TIC356158613/blc00_guppi_59378_36305_044266_TIC356158613_OFF_0001.0000.h5
+
+[63] Target: TIC194203348 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_22540_192144_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_22883_194060_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_23227_195982_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_23569_197892_TIC194203348_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_23936_199942_TIC194203348_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_24273_201830_TIC194203348_OFF_0001.0000.h5
+
+[64] Target: TIC190998418 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_25073_206300_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_25404_208149_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_25761_210143_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_26090_211980_TIC190998418_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_26418_213812_TIC190998418_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_26744_215638_TIC190998418_OFF_0001.0000.h5
+
+[65] Target: TIC156724719 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_30446_011524_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_31240_015960_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_31557_017731_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_31872_019495_TIC156724719_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_32188_021260_TIC156724719_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_32505_023030_TIC156724719_OFF_0001.0000.h5
+
+[66] Target: TIC9392421 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_32826_024822_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_33145_026609_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_33461_028374_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_33777_030138_TIC9392421_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_34093_031903_TIC9392421_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_34408_033662_TIC9392421_OFF_0001.0000.h5
+
+[67] Target: TIC356158613 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_34726_035444_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_35042_037208_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_35359_038978_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_35675_040742_TIC356158613_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_35990_042507_TIC356158613_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_36305_044266_TIC356158613_OFF_0001.0000.h5
+
+[68] Target: TIC333473672 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_36622_046036_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_36938_047801_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_37254_049566_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_37568_051325_TIC333473672_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_37999_053733_TIC333473672_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_38313_055487_TIC333473672_OFF_0001.0000.h5
+
+[69] Target: TIC125442121 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_38630_057257_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_38943_059004_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_39260_060775_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_39572_062523_TIC125442121_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_39886_064276_TIC125442121_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_40201_066035_TIC125442121_OFF_0001.0000.h5
+
+[70] Target: TIC176899385 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_40507_067743_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_40821_069502_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_41134_071250_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_41447_072998_TIC176899385_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_41759_074740_TIC176899385_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_42072_076488_TIC176899385_OFF_0001.0000.h5
+
+[71] Target: TIC174041208 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_42382_078224_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_42696_079978_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_43007_081714_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_43320_083462_TIC174041208_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_43630_085199_TIC174041208_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_43943_086946_TIC174041208_OFF_0001.0000.h5
+
+[72] Target: TIC176860064 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_44252_088672_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_44563_090409_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_44875_092151_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_45186_093893_TIC176860064_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_45497_095629_TIC176860064_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_45808_097366_TIC176860064_OFF_0001.0000.h5
+
+[73] Target: TIC174302697 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_46118_099097_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_46428_100833_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_46739_102570_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_47050_104306_TIC174302697_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_47361_106044_TIC174302697_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_47670_107774_TIC174302697_OFF_0001.0000.h5
+
+[74] Target: TIC252636888 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_47976_109483_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_48290_111236_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_48601_112973_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_48911_114709_TIC252636888_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_49221_116440_TIC252636888_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_49532_118177_TIC252636888_OFF_0001.0000.h5
+
+[75] Target: TIC345143460 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_49836_119874_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_50150_121632_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_50460_123364_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_50771_125100_TIC345143460_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_51081_126831_TIC345143460_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_51392_128568_TIC345143460_OFF_0001.0000.h5
+
+[76] Target: TIC378291076 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_51698_130282_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_52010_132024_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_52321_133761_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_52631_135492_TIC378291076_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_52941_137228_TIC378291076_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_53251_138959_TIC378291076_OFF_0001.0000.h5
+
+[77] Target: TIC366074069 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_53559_140679_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_53869_142410_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_54180_144147_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_54489_145877_TIC366074069_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_54800_147614_TIC366074069_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_55111_149350_TIC366074069_OFF_0001.0000.h5
+
+[78] Target: TIC317507345 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_55419_151070_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_55729_152806_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_56039_154538_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_56351_156280_TIC317507345_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_56660_158010_TIC317507345_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_56971_159747_TIC317507345_OFF_0001.0000.h5
+
+[79] Target: TIC264678534 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_57278_161461_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_57591_163209_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_57904_164957_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_58214_166693_TIC264678534_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_58526_168435_TIC264678534_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_58838_170177_TIC264678534_OFF_0001.0000.h5
+
+[80] Target: TIC470159478 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_59154_171942_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_59464_173678_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_59777_175426_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_60089_177168_TIC470159478_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_60719_180691_TIC470159478_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_61032_182439_TIC470159478_OFF_0001.0000.h5
+
+[81] Target: TIC160162987 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_61342_184170_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_61654_185913_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_61967_187661_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_62280_189413_TIC160162987_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_62594_191167_TIC160162987_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_62907_192915_TIC160162987_OFF_0001.0000.h5
+
+[82] Target: TIC154872375 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_63221_194668_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_63535_196422_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_63848_198175_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_64162_199928_TIC154872375_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_64477_201687_TIC154872375_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_64790_203435_TIC154872375_OFF_0001.0000.h5
+
+[83] Target: TIC154867950 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_65103_205188_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_65419_206953_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_65734_208712_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_66048_210465_TIC154867950_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_66362_212224_TIC154867950_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_66677_213983_TIC154867950_OFF_0001.0000.h5
+
+[84] Target: TIC328933398 | Date: 59378 | Snippets: 65536
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_66992_215742_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_67308_217506_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_67623_219265_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_67937_221024_TIC328933398_OFF_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_68251_222778_TIC328933398_ON_0001.0000.h5
+    /datax/users/obs/lpizzuto/HYPERSETI/h5_dir/blc00_guppi_59378_68565_224531_TIC328933398_OFF_0001.0000.h5
+
+[85] Target: TIC367858035 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_52739_056513_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_53050_058250_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_53360_059986_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_53671_061723_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_53983_063465_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_54294_065202_TIC367858035_OFF_0001.0000.h5
+
+[86] Target: TIC160077104 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_60208_098252_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_60520_099994_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_60833_101742_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_61541_105696_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_61854_107449_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_62167_109197_TIC160077104_OFF_0001.0000.h5
+
+[87] Target: TIC459903429 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_62481_110950_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_62795_112704_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_63109_114463_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_63422_116211_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_63737_117969_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_64139_120216_TIC459903429_OFF_0001.0000.h5
+
+[88] Target: TIC428988981 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_54600_066910_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_54912_068658_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_55223_070395_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_55534_072131_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_55845_073867_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_56155_075604_TIC428988981_OFF_0001.0000.h5
+
+[89] Target: TIC268403451 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_64453_121969_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_64765_123716_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_65613_128450_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_66446_133105_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_66762_134875_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_67079_136645_TIC268403451_OFF_0001.0000.h5
+
+[90] Target: TIC154741689 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_56465_077335_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_56778_079083_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_57089_080819_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_57401_082567_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_57714_084315_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_58026_086057_TIC154741689_OFF_0001.0000.h5
+
+[91] Target: TIC470852531 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_49009_035669_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_49321_037412_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_49630_039143_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_49942_040885_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_50253_042621_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_50565_044363_TIC470852531_OFF_0001.0000.h5
+
+[92] Target: TIC268334473 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_58336_087787_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_58646_089524_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_58959_091272_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_59270_093009_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_59583_094756_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_59898_096515_TIC268334473_OFF_0001.0000.h5
+
+[93] Target: TIC265460043 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_50872_046083_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_51184_047825_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_51499_049584_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_51809_051315_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_52119_053051_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/blc00_guppi_59375_52431_054793_TIC265460043_OFF_0001.0000.h5
+
+[94] Target: TIC431514478 | Date: 43151447 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_47137_025211_TIC431514478_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_47475_027099_TIC431514478_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_47761_028695_TIC431514478_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_48073_030438_TIC431514478_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_48385_032185_TIC431514478_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC431514478/blc00_guppi_59375_48696_033922_TIC431514478_OFF_0001.0000.h5
+
+[95] Target: TIC154741689 | Date: 15474168 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_56465_077335_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_56778_079083_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_57089_080819_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_57401_082567_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_57714_084315_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC154741689/blc00_guppi_59375_58026_086057_TIC154741689_OFF_0001.0000.h5
+
+[96] Target: TIC459903429 | Date: 45990342 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_62481_110950_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_62795_112704_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_63109_114463_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_63422_116211_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_63737_117969_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC459903429/blc00_guppi_59375_64139_120216_TIC459903429_OFF_0001.0000.h5
+
+[97] Target: TIC470852531 | Date: 47085253 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_49009_035669_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_49321_037412_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_49630_039143_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_49942_040885_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_50253_042621_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC470852531/blc00_guppi_59375_50565_044363_TIC470852531_OFF_0001.0000.h5
+
+[98] Target: TIC268334473 | Date: 26833447 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_58336_087787_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_58646_089524_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_58959_091272_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_59270_093009_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_59583_094756_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268334473/blc00_guppi_59375_59898_096515_TIC268334473_OFF_0001.0000.h5
+
+[99] Target: TIC367858035 | Date: 36785803 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_52739_056513_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_53050_058250_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_53360_059986_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_53671_061723_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_53983_063465_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC367858035/blc00_guppi_59375_54294_065202_TIC367858035_OFF_0001.0000.h5
+
+[100] Target: TIC268403451 | Date: 26840345 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_64453_121969_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_64765_123716_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_65613_128450_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_66446_133105_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_66762_134875_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC268403451/blc00_guppi_59375_67079_136645_TIC268403451_OFF_0001.0000.h5
+
+[101] Target: TIC428988981 | Date: 42898898 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_54600_066910_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_54912_068658_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_55223_070395_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_55534_072131_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_55845_073867_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC428988981/blc00_guppi_59375_56155_075604_TIC428988981_OFF_0001.0000.h5
+
+[102] Target: TIC160077104 | Date: 16007710 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_60208_098252_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_60520_099994_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_60833_101742_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_61541_105696_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_61854_107449_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC160077104/blc00_guppi_59375_62167_109197_TIC160077104_OFF_0001.0000.h5
+
+[103] Target: TIC265460043 | Date: 26546004 | Snippets: 65536
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_50872_046083_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_51184_047825_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_51499_049584_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_51809_051315_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_52119_053051_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/turboSETI/10giugno/TIC265460043/blc00_guppi_59375_52431_054793_TIC265460043_OFF_0001.0000.h5
+
+[104] Target: TIC367858035 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_52739_056513_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_53050_058250_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_53360_059986_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_53671_061723_TIC367858035_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_53983_063465_TIC367858035_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_54294_065202_TIC367858035_OFF_0001.0000.h5
+
+[105] Target: TIC160077104 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_60208_098252_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_60520_099994_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_60833_101742_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_61541_105696_TIC160077104_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_61854_107449_TIC160077104_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_62167_109197_TIC160077104_OFF_0001.0000.h5
+
+[106] Target: TIC459903429 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_62481_110950_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_62795_112704_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_63109_114463_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_63422_116211_TIC459903429_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_63737_117969_TIC459903429_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_64139_120216_TIC459903429_OFF_0001.0000.h5
+
+[107] Target: TIC428988981 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_54600_066910_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_54912_068658_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_55223_070395_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_55534_072131_TIC428988981_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_55845_073867_TIC428988981_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_56155_075604_TIC428988981_OFF_0001.0000.h5
+
+[108] Target: TIC268403451 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_64453_121969_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_64765_123716_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_65613_128450_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_66446_133105_TIC268403451_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_66762_134875_TIC268403451_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_67079_136645_TIC268403451_OFF_0001.0000.h5
+
+[109] Target: TIC154741689 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_56465_077335_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_56778_079083_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_57089_080819_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_57401_082567_TIC154741689_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_57714_084315_TIC154741689_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_58026_086057_TIC154741689_OFF_0001.0000.h5
+
+[110] Target: TIC470852531 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_49009_035669_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_49321_037412_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_49630_039143_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_49942_040885_TIC470852531_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_50253_042621_TIC470852531_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_50565_044363_TIC470852531_OFF_0001.0000.h5
+
+[111] Target: TIC268334473 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_58336_087787_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_58646_089524_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_58959_091272_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_59270_093009_TIC268334473_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_59583_094756_TIC268334473_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_59898_096515_TIC268334473_OFF_0001.0000.h5
+
+[112] Target: TIC265460043 | Date: 59375 | Snippets: 65536
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_50872_046083_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_51184_047825_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_51499_049584_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_51809_051315_TIC265460043_OFF_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_52119_053051_TIC265460043_ON_0001.0000.h5
+    /datax/users/obs/mmulas/data/hyperSETI/10giugno/h5_dir/blc00_guppi_59375_52431_054793_TIC265460043_OFF_0001.0000.h5
+
