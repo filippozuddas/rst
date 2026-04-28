@@ -36,6 +36,8 @@ def main():
                         help='If specified, exports a flat list of HDF5 file paths for rsync')
     parser.add_argument('--cadences-per-bin', type=int, default=10,
                         help='Number of cadences to select per frequency bin for the export list (default: 10)')
+    parser.add_argument('--target-bins', type=int, nargs='+', default=None,
+                        help='Optional list of frequency bins in MHz (e.g., 4300 4800 5200) to export')
     
     args = parser.parse_args()
     
@@ -106,6 +108,8 @@ def main():
         import random
         selected_files = []
         for freq_bin in sorted_bins:
+            if args.target_bins and freq_bin not in args.target_bins:
+                continue
             cads = by_freq[freq_bin]
             n_take = min(args.cadences_per_bin, len(cads))
             selected = random.sample(cads, n_take)
