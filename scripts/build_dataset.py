@@ -102,35 +102,30 @@ def build_dataset(
     print(f"    Seed: {seed}")
     print(f"\n  Generating {n_true} True + {n_false} False = {total} samples...")
 
-    spectrograms = []
-    labels = []
+    spectrograms = np.zeros((total, 96, 1024), dtype=np.float32)
+    labels = np.zeros(total, dtype=np.float32)
+
+    # Generate shuffled indices to populate directly
+    all_indices = np.arange(total)
+    rng.shuffle(all_indices)
+    true_indices = all_indices[:n_true]
+    false_indices = all_indices[n_true:]
 
     # True samples (label = 1)
     print(f"\n  → True samples (ETI):")
-    for _ in tqdm(range(n_true), desc="    True"):
+    for idx in tqdm(true_indices, desc="    True"):
         cadence = gen.create_true_sample_fast()
         stacked = stack_cadence(cadence)  # (96, 1024)
-        spectrograms.append(stacked)
-        labels.append(1)
+        spectrograms[idx] = stacked
+        labels[idx] = 1
 
     # False samples (label = 0)
     print(f"\n  → False samples (RFI):")
-    for _ in tqdm(range(n_false), desc="    False"):
+    for idx in tqdm(false_indices, desc="    False"):
         cadence = gen.create_false_sample()
         stacked = stack_cadence(cadence)  # (96, 1024)
-        spectrograms.append(stacked)
-        labels.append(0)
-
-    spectrograms = np.array(spectrograms, dtype=np.float32)
-    labels = np.array(labels, dtype=np.float32)
-
-    print(f"\n  Dataset shape: {spectrograms.shape}")
-    print(f"  Labels: {int(labels.sum())} True, {int(len(labels) - labels.sum())} False")
-
-    # ---- 4. Shuffle and split ----
-    indices = rng.permutation(total)
-    spectrograms = spectrograms[indices]
-    labels = labels[indices]
+        spectrograms[idx] = stacked
+        labels[idx] = 0
 
     n_val = int(total * val_split)
     n_train = total - n_val
