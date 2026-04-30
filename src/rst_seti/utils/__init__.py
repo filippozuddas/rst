@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """RST — Shared utilities."""
 
-from src.utils.visualization import (
+from rst_seti.utils.visualization import (
     # Style
     apply_light_style,
     # Spectrogram / cadence plots

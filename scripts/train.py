@@ -16,12 +16,11 @@ import yaml
 from pathlib import Path
 
 # Add the parent directory to the path for imports
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
-from src.models.rst_model import RSTModel
-from src.data.dataset import create_dataloaders
-from src.training.trainer import train
+from rst_seti.models.rst_model import RSTModel
+from rst_seti.data.dataset import create_dataloaders
+from rst_seti.training.trainer import train
 
 
 def load_config(config_path: str) -> dict:

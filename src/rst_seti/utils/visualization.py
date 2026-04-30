@@ -19,7 +19,7 @@ from PIL import Image
 from pathlib import Path
 from typing import Optional, Dict, Any
 
-from src.models.rst_model import RSTModel
+from rst_seti.models.rst_model import RSTModel
 
 
 # ------------------------------------------------------------------ #

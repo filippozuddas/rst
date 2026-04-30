@@ -1,0 +1,89 @@
+# RST Default Configuration
+
+model:
+  name: "rst_base384"
+  label_dim: 1
+  input_fdim: 1024        # Raw frequency channels (no binning)
+  input_tdim: 96           # 6 observations × 16 time bins
+  patch_size: 16
+  stride: 16               # Non-overlapping patches → 384 total
+  model_size: "base384"
+  imagenet_pretrain: true
+
+data:
+  snippet_width: 1024      # Raw channels per snippet (no downsampling)
+  freq_resolution_hz: 2.79 # Hz per channel (native SRT resolution)
+  binning_factor: 1        # 1 = no binning
+  sliding_window_step: 512 # 50% overlap for inference only
+  train_data: "/content/nvme_esterno/filippo/rst/data/processed/large_dataset_v5/train.npz"
+  val_data: "/content/nvme_esterno/filippo/rst/data/processed/large_dataset_v5/val.npz"
+  test_data: "data/processed/test.npz"
+
+training:
+  # Training mode: "full" (AST-style, single LR) or "progressive" (3-phase unfreezing)
+  mode: "progressive"
+
+  # --- Full fine-tune mode (default) ---
+  # Recommended with 50k+ samples (diverse SRT backgrounds)
+  lr: 3.0e-5
+  epochs: 35
+
+  # --- Progressive unfreezing mode ---
+  # Recommended with <10k samples or limited background variety
+  phases:
+    - name: "head_only"
+      layers: "head"
+      lr: 3.0e-4
+      epochs: 3
+    - name: "last_4_blocks"
+      layers: "last_4_blocks"
+      lr: 8.0e-5
+      epochs: 6
+    - name: "full_finetune"
+      layers: "all"
+      lr: 3.0e-5
+      epochs: 22
+
+  batch_size: 256
+  mixed_precision: true
+  gradient_clip: 1.0
+  weight_averaging: true
+  eta_min: 1.0e-7              # Minimum LR for schedulers
+
+  # --- Scheduler ---
+  # 'warmup_cosine' = Linear Warmup + Cosine Decay (standard for Transformers)
+  # 'cosine'        = CosineAnnealingLR (smooth decay, no warmup)
+  # 'plateau'       = ReduceLROnPlateau (adaptive, monitors val_loss)
+  # 'plateau_f1'    = ReduceLROnPlateau (adaptive, monitors val_f1)
+  # 'onecycle'      = OneCycleLR (fast.ai style, per-batch stepping)
+  scheduler: "warmup_cosine"
+
+  # Warmup parameters (for warmup_cosine)
+  warmup_epochs: 2             # ~8-10% of total epochs
+  warmup_start_factor: 0.1     # Start LR = lr * start_factor
+
+  # Plateau parameters (for plateau / plateau_f1)
+  plateau_patience: 5          # Epochs without improvement before LR cut
+  plateau_factor: 0.5          # LR *= factor on plateau
+
+  # OneCycle parameters
+  max_lr: 5.0e-5               # Peak LR for OneCycleLR
+
+  # --- Loss Function ---
+  focal_loss: true             # FocalLoss (set true to enable, overrides label_smoothing)
+  focal_gamma: 1.5             # Bilanciamento tra v1 (2.0) e v2 (1.0)
+  focal_alpha: 0.5             # Reverted to 0.5 for equal FP/FN balancing
+  label_smoothing: 0.0         # BCE label smoothing (0.0 = disabled, 0.1 = targets become 0.05/0.95)
+
+augmentation:
+  freq_mask: 32                # Reduced from 32 to preserve narrowband ETI signals
+  time_mask: 8                 # Restored to baseline value
+  mixup_alpha: 0.35            # Bilanciamento tra v1 (0.5) e v2 (0.2)
+  drop_path: 0.15
+
+inference:
+  batch_size: 128             # Optimized for 48GB VRAM
+  sliding_window_step: 512    # 50% overlap (snippet_width=1024)
+  threshold: 0.9              # New high-confidence threshold
+  attn_threshold: 0.9         # Aligned with main threshold
+  output_dir: "results/"

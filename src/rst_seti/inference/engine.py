@@ -15,8 +15,9 @@ from pathlib import Path
 from tqdm import tqdm
 from typing import List, Tuple, Optional
 
-from src.models.rst_model import RSTModel
-from src.data.preprocessing import preprocess_cadence
+from rst_seti.models.rst_model import RSTModel
+from rst_seti.data.preprocessing import preprocess_cadence
+from rst_seti.hardware import HardwareManager
 
 
 class InferenceEngine:
@@ -29,7 +30,9 @@ class InferenceEngine:
     Args:
         config_path: Path to YAML config file.
         checkpoint_path: Path to model checkpoint (.pth).
-        device: Device string ('cuda' or 'cpu'). Auto-detects if None.
+        device: Device string (e.g. 'cuda', 'cuda:1', 'cpu').
+                If None, auto-detects the best available device.
+        batch_size: Override batch size. If None, infers from VRAM.
     """
 
     def __init__(
@@ -37,6 +40,7 @@ class InferenceEngine:
         config_path: str,
         checkpoint_path: str,
         device: str = None,
+        batch_size: int = None,
     ):
         # Load config
         with open(config_path, 'r') as f:
@@ -50,16 +54,19 @@ class InferenceEngine:
         self.snippet_width = d_cfg.get('snippet_width', 1024)
         self.sliding_step = i_cfg.get('sliding_window_step',
                                        d_cfg.get('sliding_window_step', 512))
-        self.batch_size = i_cfg.get('batch_size', 128)
         self.threshold = i_cfg.get('threshold', 0.5)
         self.attn_threshold = i_cfg.get('attn_threshold', 0.9)
 
-
-        # Device
-        if device is None:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        else:
-            self.device = torch.device(device)
+        # Device & dtype — resolved via HardwareManager
+        # batch_size priority: CLI arg > config > HardwareManager default
+        config_batch = i_cfg.get('batch_size', None)
+        hw = HardwareManager.detect(
+            preferred_device=device,
+            preferred_batch_size=batch_size or config_batch,
+        )
+        self.device = hw.device
+        self.dtype = hw.dtype
+        self.batch_size = hw.recommended_batch_size
 
         # Build model
         self.model = RSTModel(
@@ -81,7 +88,7 @@ class InferenceEngine:
         self.model.to(self.device)
         self.model.eval()
 
-        print(f"✅ Model loaded on {self.device}")
+        print(f"✅ Model loaded | {hw}")
         print(f"   Snippet width: {self.snippet_width}, "
               f"Sliding step: {self.sliding_step}")
 
@@ -144,31 +151,45 @@ class InferenceEngine:
         Returns:
             Probabilities array of shape (N,).
         """
-        dataset = torch.utils.data.TensorDataset(
-            torch.from_numpy(spectrograms)
-        )
-        loader = torch.utils.data.DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=False,
-            num_workers=0, pin_memory=(self.device.type == 'cuda'),
-        )
+        while True:
+            try:
+                dataset = torch.utils.data.TensorDataset(
+                    torch.from_numpy(spectrograms)
+                )
+                loader = torch.utils.data.DataLoader(
+                    dataset, batch_size=self.batch_size, shuffle=False,
+                    num_workers=0, pin_memory=(self.device.type == 'cuda'),
+                )
 
-        all_probs = []
-        for (batch,) in loader:
-            # Check for NaNs/Infs in the input (critical for debugging real HDF5 data)
-            if not torch.isfinite(batch).all():
-                n_nan = torch.isnan(batch).sum().item()
-                n_inf = torch.isinf(batch).sum().item()
-                print(f"  ⚠️  WARNING: Input batch contains {n_nan} NaNs and {n_inf} Infs! "
-                      f"Replacing with 0 for this batch.")
-                batch = torch.nan_to_num(batch, nan=0.0, posinf=0.0, neginf=0.0)
+                all_probs = []
+                for (batch,) in loader:
+                    # Check for NaNs/Infs in the input (critical for debugging real HDF5 data)
+                    if not torch.isfinite(batch).all():
+                        n_nan = torch.isnan(batch).sum().item()
+                        n_inf = torch.isinf(batch).sum().item()
+                        print(f"  ⚠️  WARNING: Input batch contains {n_nan} NaNs and {n_inf} Infs! "
+                              f"Replacing with 0 for this batch.")
+                        batch = torch.nan_to_num(batch, nan=0.0, posinf=0.0, neginf=0.0)
 
-            batch = batch.to(self.device)
-            # Mixed precision removed to avoid NaNs on real SRT data overflow
-            logits = self.model(batch)
-            probs = torch.sigmoid(logits)
-            all_probs.append(probs.cpu().numpy())
+                    batch = batch.to(self.device)
+                    # Mixed precision removed to avoid NaNs on real SRT data overflow
+                    logits = self.model(batch)
+                    probs = torch.sigmoid(logits)
+                    all_probs.append(probs.cpu().numpy())
 
-        return np.concatenate(all_probs, axis=0).flatten()
+                return np.concatenate(all_probs, axis=0).flatten()
+
+            except torch.cuda.OutOfMemoryError:
+                if self.batch_size <= 1:
+                    raise RuntimeError(
+                        "CUDA OOM even with batch_size=1. "
+                        "Try running with --device cpu."
+                    )
+                old_bs = self.batch_size
+                self.batch_size = max(1, self.batch_size // 2)
+                if self.device.type == 'cuda':
+                    torch.cuda.empty_cache()
+                print(f"  ⚠️  CUDA OOM: reducing batch_size {old_bs} → {self.batch_size}")
 
 
     def cluster_detections(

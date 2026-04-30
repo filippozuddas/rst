@@ -12,9 +12,8 @@ from pathlib import Path
 import sys
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.data.background_extractor import DatasetBuilder
+from rst_seti.data.background_extractor import DatasetBuilder
 
 BAND_MAPPING = {
     'C': '6GHz',

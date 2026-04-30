@@ -14,9 +14,8 @@ import sys
 from collections import defaultdict
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.data.background_extractor import DatasetBuilder
+from rst_seti.data.background_extractor import DatasetBuilder
 
 def format_freq(freq_mhz):
     """Format frequency in MHz to a readable string."""

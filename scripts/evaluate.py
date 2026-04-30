@@ -23,12 +23,11 @@ from typing import Tuple
 from sklearn.metrics import f1_score, precision_score, recall_score, precision_recall_curve
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.models.rst_model import RSTModel
-from src.data.dataset import SETIDataset
-from src.evaluation.metrics import print_report, compute_metrics
-from src.utils.visualization import plot_threshold_sweep
+from rst_seti.models.rst_model import RSTModel
+from rst_seti.data.dataset import SETIDataset
+from rst_seti.evaluation.metrics import print_report, compute_metrics
+from rst_seti.utils.visualization import plot_threshold_sweep
 
 
 def load_config(config_path: str) -> dict:

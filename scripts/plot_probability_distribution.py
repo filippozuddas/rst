@@ -20,9 +20,8 @@ import pandas as pd
 from pathlib import Path
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.utils.visualization import (
+from rst_seti.utils.visualization import (
     plot_prob_distribution,
     plot_prob_split,
     plot_prob_ccdf,
