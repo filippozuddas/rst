@@ -27,6 +27,7 @@ from tqdm import tqdm
 from typing import Tuple
 
 # Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 from rst_seti.inference.engine import InferenceEngine
 from rst_seti.utils.visualization import (
