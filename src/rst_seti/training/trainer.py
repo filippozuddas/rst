@@ -308,13 +308,17 @@ def train(
             )
 
     # ====================================================================== #
-    #  Weight Averaging: average the weights of the last N checkpoints
+    #  Weight Averaging: average checkpoints around convergence
     # ====================================================================== #
     if config.get('weight_averaging', True):
-        wa_model = weight_average(model, save_dir, n_last=5)
+        n_before = config.get('wa_n_before', 4)
+        wa_model, wa_epochs = weight_average(
+            model, save_dir, best_epoch=best_val_epoch, n_before=n_before,
+        )
         if wa_model is not None:
             torch.save(wa_model, save_dir / 'model_wa.pth')
-            print(f'\nWeight averaging saved (last 5 checkpoints)')
+            print(f'\nWeight averaging saved (epochs {wa_epochs[0]}–{wa_epochs[-1]}, '
+                  f'best={best_val_epoch})')
 
     # Save training history
     np.savez(save_dir / 'history.npz', **history)
@@ -474,33 +478,41 @@ def _validate(
 def weight_average(
     model: nn.Module,
     checkpoint_dir: Path,
-    n_last: int = 5,
-) -> Optional[Dict]:
+    best_epoch: int,
+    n_before: int = 4,
+) -> Tuple[Optional[Dict], List[int]]:
     """
-    Average the weights of the last N checkpoints to improve generalization.
-    Returns averaged state dict, or None if not enough checkpoints.
+    Average checkpoints from (best_epoch - n_before) to best_epoch inclusive.
+
+    Epochs after best_epoch are excluded because the model is overfitting there.
+    Returns (averaged state dict, list of epoch indices used), or (None, []) if
+    no valid checkpoints are found.
     """
     checkpoint_dir = Path(checkpoint_dir)
-    checkpoints = sorted(checkpoint_dir.glob('epoch_*.pth'))
 
-    if len(checkpoints) < n_last:
-        print(f'Only {len(checkpoints)} checkpoints, need at least {n_last} for WA')
-        return None
+    start_epoch = max(1, best_epoch - n_before)
+    epochs_to_avg = list(range(start_epoch, best_epoch + 1))
 
-    # Take the last n_last
-    checkpoints = checkpoints[-n_last:]
+    checkpoints = []
+    for ep in epochs_to_avg:
+        ckpt = checkpoint_dir / f'epoch_{ep:03d}.pth'
+        if ckpt.exists():
+            checkpoints.append((ep, ckpt))
 
-    # Load the first as base
-    avg_state = torch.load(checkpoints[0], map_location='cpu')
+    if not checkpoints:
+        print(f'No checkpoints found for epochs {start_epoch}–{best_epoch}')
+        return None, []
 
-    # Sum all the others
-    for ckpt_path in checkpoints[1:]:
+    epoch_indices = [ep for ep, _ in checkpoints]
+
+    avg_state = torch.load(checkpoints[0][1], map_location='cpu')
+    for _, ckpt_path in checkpoints[1:]:
         state = torch.load(ckpt_path, map_location='cpu')
         for key in avg_state:
             avg_state[key] = avg_state[key] + state[key]
 
-    # Divide by the number of checkpoints
+    n = float(len(checkpoints))
     for key in avg_state:
-        avg_state[key] = (avg_state[key] / float(n_last)).to(avg_state[key].dtype)
+        avg_state[key] = (avg_state[key] / n).to(avg_state[key].dtype)
 
-    return avg_state
+    return avg_state, epoch_indices
