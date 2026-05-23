@@ -129,6 +129,9 @@ def train(
     global_epoch = 0
     train_start_time = time.time()
 
+    patience = config.get('early_stopping_patience', 5)
+    stop_training = False
+
     # Build the list of phases depending on mode
     if mode == 'full':
         phases = [{
@@ -149,6 +152,9 @@ def train(
     #  MAIN LOOP: iterate over training phases
     # ====================================================================== #
     for phase_idx, phase in enumerate(phases):
+        if stop_training:
+            break
+
         phase_name = phase['name']
         lr = phase['lr']
         epochs = phase['epochs']
@@ -157,7 +163,11 @@ def train(
         print(f'\n{"="*60}')
         print(f'  PHASE {phase_idx + 1}/{len(phases)}: {phase_name}')
         print(f'  LR: {lr}, Epochs: {epochs}, Layers: {layers}')
+        if patience > 0:
+            print(f'  Early stopping patience: {patience}')
         print(f'{"="*60}')
+
+        epochs_no_improve = 0
 
         # Extract the underlying model to call its custom methods (unfreeze, etc.)
         # as DataParallel does not expose them.
@@ -298,14 +308,25 @@ def train(
                 best_val_f1 = val_f1
                 best_val_epoch = global_epoch
                 best_val_loss = val_loss
+                epochs_no_improve = 0
                 torch.save(model.state_dict(), save_dir / 'best_model.pth')
                 print(f'  → New best model saved! (val_f1={val_f1:.4f})')
+            else:
+                epochs_no_improve += 1
+                if patience > 0:
+                    print(f'  → No improvement ({epochs_no_improve}/{patience})')
 
             # Save checkpoint every epoch (for weight averaging)
             torch.save(
                 model.state_dict(),
                 save_dir / f'epoch_{global_epoch:03d}.pth',
             )
+
+            if patience > 0 and epochs_no_improve >= patience:
+                print(f'\n  Early stopping triggered at epoch {global_epoch} '
+                      f'(best was epoch {best_val_epoch})')
+                stop_training = True
+                break
 
     # ====================================================================== #
     #  Weight Averaging: average checkpoints around convergence

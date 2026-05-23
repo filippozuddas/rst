@@ -48,6 +48,8 @@ training:
   mixed_precision: true
   gradient_clip: 1.0
   weight_averaging: true
+  wa_n_before: 4               # WA: epochs before best to include (best-N ... best)
+  early_stopping_patience: 5   # 0 = disabled
   eta_min: 1.0e-7              # Minimum LR for schedulers
 
   # --- Scheduler ---
