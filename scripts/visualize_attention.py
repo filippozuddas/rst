@@ -20,6 +20,7 @@ import torch
 from pathlib import Path
 
 # Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 from rst_seti.models.rst_model import RSTModel
 from rst_seti.data.dataset import SETIDataset

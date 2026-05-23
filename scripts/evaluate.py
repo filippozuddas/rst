@@ -23,6 +23,7 @@ from typing import Tuple
 from sklearn.metrics import f1_score, precision_score, recall_score, precision_recall_curve
 
 # Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 from rst_seti.models.rst_model import RSTModel
 from rst_seti.data.dataset import SETIDataset

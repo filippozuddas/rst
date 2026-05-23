@@ -23,6 +23,10 @@ from pathlib import Path
 from tqdm import tqdm
 import sys
 import os
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 from rst_seti.data.cadence_generator import CadenceGenerator, CadenceParams, SignalParams
 from rst_seti.data.preprocessing import stack_cadence

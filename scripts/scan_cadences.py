@@ -14,6 +14,7 @@ import sys
 from collections import defaultdict
 
 # Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 from rst_seti.data.background_extractor import DatasetBuilder
 

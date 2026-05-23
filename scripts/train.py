@@ -15,7 +15,8 @@ import argparse
 import yaml
 from pathlib import Path
 
-# Add the parent directory to the path for imports
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
 import torch
 from rst_seti.models.rst_model import RSTModel
