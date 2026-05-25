@@ -24,25 +24,33 @@ training:
   mode: "full"
 
   # --- Full fine-tune mode (default) ---
-  # Recommended with 50k+ samples (diverse SRT backgrounds)
+  # AST-style: all parameters unfrozen from epoch 1. Works well with diverse
+  # backgrounds and strong regularization (FocalLoss + mixup + weight decay).
+  # Use early stopping + WA around convergence (wa_n_before).
   lr: 1.0e-4
   epochs: 25
 
   # --- Progressive unfreezing mode ---
-  # Recommended with <10k samples or limited background variety
+  # Preserves pretrained ImageNet features; tends to produce higher-confidence
+  # outputs. Preferred when background diversity is limited or domain gap is large.
   phases:
     - name: "head_only"
       layers: "head"
       lr: 3.0e-4
-      epochs: 3
+      epochs: 8
+      scheduler: "cosine"         # no warmup: backbone frozen, no catastrophic forgetting risk
     - name: "last_4_blocks"
       layers: "last_4_blocks"
       lr: 8.0e-5
-      epochs: 6
+      epochs: 12
+      scheduler: "warmup_cosine"
+      warmup_epochs: 2            # short warmup: blocks already partially trained
     - name: "full_finetune"
       layers: "all"
       lr: 3.0e-5
-      epochs: 22
+      epochs: 25                  # early stopping handles actual end
+      scheduler: "warmup_cosine"
+      warmup_epochs: 3
 
   batch_size: 256
   mixed_precision: true

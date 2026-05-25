@@ -197,9 +197,9 @@ def train(
             betas=(0.95, 0.999),     # Same as the AST paper
         )
 
-        # Scheduler: configurable via config['scheduler']
+        # Scheduler: phase dict overrides global config (fallback chain: phase → config → default)
         # Supported: 'cosine', 'plateau', 'plateau_f1', 'warmup_cosine', 'onecycle'
-        scheduler_name = config.get('scheduler', 'warmup_cosine').lower()
+        scheduler_name = phase.get('scheduler', config.get('scheduler', 'warmup_cosine')).lower()
         min_lr = config.get('eta_min', 1e-7)
         plateau_patience = config.get('plateau_patience', 5)
         plateau_factor = config.get('plateau_factor', 0.5)
@@ -222,8 +222,10 @@ def train(
                   f'factor={plateau_factor}, min_lr={min_lr}, monitor=val_f1)')
 
         elif scheduler_name == 'warmup_cosine':
-            warmup_epochs = config.get('warmup_epochs', 3)
-            warmup_start_factor = config.get('warmup_start_factor', 0.1)
+            warmup_epochs = phase.get('warmup_epochs', config.get('warmup_epochs', 3))
+            warmup_start_factor = phase.get('warmup_start_factor', config.get('warmup_start_factor', 0.1))
+            # Guard: warmup cannot exceed phase length
+            warmup_epochs = min(warmup_epochs, epochs - 1)
             warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
                 optimizer, start_factor=warmup_start_factor,
                 end_factor=1.0, total_iters=warmup_epochs,

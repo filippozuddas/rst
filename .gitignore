@@ -35,3 +35,5 @@ GEMINI.md
 *.mp4
 
 results/**/*.csv
+
+graphify-out
