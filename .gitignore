@@ -32,6 +32,8 @@ Thumbs.db
 wandb/
 
 GEMINI.md
+CLAUDE.md
+.antigravitycli
 *.mp4
 
 results/**/*.csv
