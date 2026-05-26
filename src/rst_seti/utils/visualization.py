@@ -12,7 +12,12 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend for Colab/server
+# Headless backend for scripts (training/eval on servers), but respect an
+# interactive/inline backend when running inside a notebook — otherwise 'Agg'
+# silently swallows every figure and nothing renders inline.
+_INTERACTIVE_BACKENDS = ('inline', 'ipympl', 'widget', 'nbagg')
+if not any(b in matplotlib.get_backend().lower() for b in _INTERACTIVE_BACKENDS):
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from PIL import Image
@@ -38,7 +43,8 @@ ETI_COLOR    = "#f97316"   # orange
 THRESH_COLOR = "#f43f5e"   # rose
 
 FONT_FAMILY  = "DejaVu Sans"
-DPI          = 300
+DPI          = 300   # savefig resolution (publication quality)
+DISPLAY_DPI  = 110   # on-screen / inline rendering — keeps notebook figures sane
 
 
 def apply_light_style() -> None:
@@ -61,7 +67,7 @@ def apply_light_style() -> None:
         "legend.labelcolor": TEXT_COLOR,
         "text.color":        TEXT_COLOR,
         "font.family":       FONT_FAMILY,
-        "figure.dpi":        DPI,
+        "figure.dpi":        DISPLAY_DPI,
     })
 
 
@@ -529,7 +535,7 @@ def plot_prob_distribution(
     ax.set_xlim(0, 1)
 
     plt.tight_layout()
-    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
+    fig.savefig(output_path, dpi=DPI, bbox_inches="tight", facecolor=BG_COLOR)
     plt.close(fig)
 
 
@@ -604,7 +610,7 @@ def plot_prob_split(
         ax.set_visible(False)
 
     plt.tight_layout()
-    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
+    fig.savefig(output_path, dpi=DPI, bbox_inches="tight", facecolor=BG_COLOR)
     plt.close(fig)
 
 
@@ -653,5 +659,5 @@ def plot_prob_ccdf(
     ax.legend(fontsize=10, framealpha=0.8)
 
     plt.tight_layout()
-    fig.savefig(output_path, bbox_inches="tight", facecolor=BG_COLOR)
+    fig.savefig(output_path, dpi=DPI, bbox_inches="tight", facecolor=BG_COLOR)
     plt.close(fig)
