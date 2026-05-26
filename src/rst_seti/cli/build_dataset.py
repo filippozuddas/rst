@@ -30,7 +30,7 @@ def build_dataset(
     val_split: float = 0.15,
     seed: int = None,
     fchans: int = 1024,
-    snr_min: float = 10.0,
+    snr_min: float = 5.0,
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
@@ -140,13 +140,15 @@ def build_dataset(
         'snr_min': snr_min,
         'snr_max': snr_max,
         'snr_distribution': 'log_uniform',
+        'snr_convention': 'per_on_scan_visible',
         'drift_rate_distribution': 'log_uniform',
         'drift_rate_max': max_drift,
         'eti_only_fraction': eti_only_fraction,
         'rfi_fraction': rfi_fraction,
-        'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating'],
-        'freq_profiles': ['gaussian', 'sinc2'],
-        'time_profiles': ['constant', 'scintillating'],
+        'rfi_types': ['linear', 'stationary', 'random_walk',
+                      'scintillating', 'broadband', 'pulsed'],
+        'freq_profiles': ['gaussian', 'sinc2', 'lorentzian', 'voigt'],
+        'time_profiles': ['constant', 'scintillating_stochastic'],
         'backgrounds_path': str(backgrounds_path),
         'n_backgrounds': len(plate),
     }
@@ -188,8 +190,8 @@ Examples:
                         help='Random seed (default: random with logging)')
     parser.add_argument('--fchans', type=int, default=1024,
                         help='Frequency channels per snippet (default: 1024)')
-    parser.add_argument('--snr-min', type=float, default=10.0,
-                        help='Minimum SNR for log-uniform sampling (default: 10)')
+    parser.add_argument('--snr-min', type=float, default=5.0,
+                        help='Minimum SNR for log-uniform sampling, per-ON-scan visible (default: 5)')
     parser.add_argument('--snr-max', type=float, default=50.0,
                         help='Maximum SNR for log-uniform sampling (default: 50)')
     parser.add_argument('--eti-only-fraction', type=float, default=0.4,

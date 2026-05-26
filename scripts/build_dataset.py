@@ -40,7 +40,7 @@ def build_dataset(
     val_split: float = 0.15,
     seed: int = None,
     fchans: int = 1024,
-    snr_min: float = 10.0,
+    snr_min: float = 5.0,
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
@@ -203,8 +203,8 @@ def main():
                         help='Random seed (default: None = random with logging)')
     parser.add_argument('--fchans', type=int, default=1024,
                         help='Frequency channels per snippet')
-    parser.add_argument('--snr-min', type=float, default=10.0,
-                        help='Minimum SNR for log-uniform sampling (default: 10)')
+    parser.add_argument('--snr-min', type=float, default=5.0,
+                        help='Minimum SNR for log-uniform sampling, per-ON-scan visible (default: 5)')
     parser.add_argument('--snr-max', type=float, default=50.0,
                         help='Maximum SNR for log-uniform sampling (default: 50)')
     parser.add_argument('--eti-only-fraction', type=float, default=0.4,
