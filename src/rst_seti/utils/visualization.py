@@ -262,6 +262,7 @@ def plot_cadence_panels(
         n_obs, 1,
         figsize=(12, 1.3 * n_obs),
         sharex=True, sharey=True,
+        gridspec_kw={'hspace': 0},   # panels touch (waterfall); set before colorbar
     )
     if n_obs == 1:
         axes = [axes]
@@ -295,7 +296,6 @@ def plot_cadence_panels(
 
     fig.colorbar(im, ax=axes, shrink=0.75, pad=0.02,
                  label='Normalized Intensity')
-    plt.subplots_adjust(hspace=0, wspace=0)
 
     if output_path:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
