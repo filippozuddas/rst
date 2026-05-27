@@ -44,6 +44,9 @@ def build_dataset(
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
+    drift_distribution: str = 'lognormal',
+    drift_median: float = 0.3,
+    drift_log_sigma: float = 0.5,
 ):
     """
     Build train/val .npz datasets from extracted backgrounds.
@@ -84,7 +87,12 @@ def build_dataset(
     # ---- 2. Initialize cadence generator ----
     params = CadenceParams(
         fchans=fchans,
-        signal_params=SignalParams(snr_min=snr_min, snr_max=snr_max),
+        signal_params=SignalParams(
+            snr_min=snr_min, snr_max=snr_max,
+            drift_distribution=drift_distribution,
+            drift_median=drift_median,
+            drift_log_sigma=drift_log_sigma,
+        ),
         eti_only_fraction=eti_only_fraction,
         rfi_fraction=rfi_fraction,
     )
@@ -92,10 +100,15 @@ def build_dataset(
 
     # ---- 3. Generate samples ----
     total = n_true + n_false
-    max_drift = gen.signal_gen.params.max_drift_rate
+    sp = gen.signal_gen.params
+    max_drift = sp.max_drift_rate
     print(f"\n  Configuration:")
     print(f"    SNR: log-uniform [{snr_min}, {snr_max}]")
-    print(f"    Drift rate: log-uniform ±{max_drift:.2f} Hz/s")
+    if sp.drift_distribution == 'lognormal':
+        print(f"    Drift rate: log-normal (median {sp.drift_median} Hz/s, "
+              f"σ {sp.drift_log_sigma} dex), |DR| ≤ {max_drift:.2f} Hz/s")
+    else:
+        print(f"    Drift rate: log-uniform [{sp.min_nonzero_drift}, {max_drift:.2f}] Hz/s")
     print(f"    True samples: {int(eti_only_fraction*100)}% ETI-only, "
           f"{int((1-eti_only_fraction)*100)}% ETI+RFI")
     print(f"    False samples: {int(rfi_fraction*100)}% RFI, "
@@ -162,13 +175,19 @@ def build_dataset(
         'snr_min': snr_min,
         'snr_max': snr_max,
         'snr_distribution': 'log_uniform',
-        'drift_rate_distribution': 'log_uniform',
+        'snr_convention': 'per_on_scan_visible',
+        'drift_rate_distribution': sp.drift_distribution,
         'drift_rate_max': max_drift,
+        'drift_median': sp.drift_median,
+        'drift_log_sigma': sp.drift_log_sigma,
+        'min_nonzero_drift': sp.min_nonzero_drift,
+        'zero_drift_prob': sp.zero_drift_prob,
         'eti_only_fraction': eti_only_fraction,
         'rfi_fraction': rfi_fraction,
-        'rfi_types': ['linear', 'stationary', 'random_walk', 'scintillating'],
-        'freq_profiles': ['gaussian', 'sinc2'],
-        'time_profiles': ['constant', 'scintillating'],
+        'rfi_types': ['linear', 'stationary', 'random_walk',
+                      'scintillating', 'broadband', 'pulsed'],
+        'freq_profiles': ['gaussian', 'sinc2', 'lorentzian', 'voigt'],
+        'time_profiles': ['constant', 'scintillating_stochastic'],
         'backgrounds_path': str(backgrounds_path),
         'n_backgrounds': len(plate),
     }
@@ -211,6 +230,13 @@ def main():
                         help='Fraction of True samples that are ETI-only (default: 0.4)')
     parser.add_argument('--rfi-fraction', type=float, default=0.6,
                         help='Fraction of False samples that contain injected RFI (default: 0.6)')
+    parser.add_argument('--drift-distribution', choices=['lognormal', 'loguniform'],
+                        default='lognormal',
+                        help="Drift magnitude distribution (default: lognormal)")
+    parser.add_argument('--drift-median', type=float, default=0.3,
+                        help='Log-normal drift median in Hz/s (default: 0.3)')
+    parser.add_argument('--drift-log-sigma', type=float, default=0.5,
+                        help='Log-normal drift spread in dex (default: 0.5)')
 
     args = parser.parse_args()
 
@@ -226,6 +252,9 @@ def main():
         snr_max=args.snr_max,
         eti_only_fraction=args.eti_only_fraction,
         rfi_fraction=args.rfi_fraction,
+        drift_distribution=args.drift_distribution,
+        drift_median=args.drift_median,
+        drift_log_sigma=args.drift_log_sigma,
     )
 
 

@@ -70,14 +70,22 @@ class SignalParams:
     rfi_width_offset_min: float = 1.0    # Hz (Reduced from 5.0 to overlap fully with ETI range)
     rfi_width_offset_max: float = 55.0   # Hz
 
-    # Drift rate parameters — log-uniform with random sign
+    # Drift rate parameters — magnitude × random sign, clipped to
+    # [min_nonzero_drift, max_drift_rate]. max is geometric (window-limited).
     max_drift_rate: float = field(
         default_factory=lambda: compute_max_drift_rate(
             snippet_width=1024, df=2.7939677238464355, dt=18.25361108, n_scans=4
         )
     )
-    min_nonzero_drift: float = 0.01  # Min non-zero drift rate for log sampling
-    zero_drift_prob: float = 0.05    # Probability of exactly zero drift
+    min_nonzero_drift: float = 0.01  # Min non-zero |DR| (Hz/s); sampler floor
+    zero_drift_prob: float = 0.05    # P(exactly zero drift) — compensated beacon
+
+    # Drift magnitude distribution: 'lognormal' (default, physically motivated:
+    # concentrates near the Earth+exoplanet rotational scale ~0.3 Hz/s at C-band)
+    # or 'loguniform' (flat per decade — broader coverage of fast drifters).
+    drift_distribution: str = 'lognormal'
+    drift_median: float = 0.3        # Hz/s — geometric centre of the log-normal
+    drift_log_sigma: float = 0.5     # spread in dex; ±1σ ≈ [0.095, 0.95] Hz/s
 
     # Frequency profile selection (ETI only — scattering reshapes celestial signals)
     freq_profiles: tuple = ('gaussian', 'sinc2', 'lorentzian', 'voigt')
@@ -117,8 +125,10 @@ class SignalGenerator:
     Sampling strategies:
         - SNR: log-uniform in [snr_min, snr_max] (more low-SNR samples).
           Convention: the label is the SNR visible in a SINGLE ON scan.
-        - Drift rate: log-uniform in [min_nonzero, max] with random sign
-          (concentrates on low drift rates as seen in real candidates)
+        - Drift rate: magnitude from a configurable distribution (default
+          log-normal centred on drift_median ≈ 0.3 Hz/s, the Earth+exoplanet
+          rotational scale at C-band) × random sign, plus a small chance of
+          exactly zero (compensated beacon). 'loguniform' is also available.
         - Freq profile (ETI): weighted random over gaussian / sinc² / lorentzian /
           voigt. Lorentzian & Voigt model exo-IPM/ISM scattering wings and are
           used for ETI only (RFI is local and unscattered).
@@ -145,29 +155,44 @@ class SignalGenerator:
         log_max = np.log10(self.params.snr_max)
         return float(10 ** self.rng.uniform(log_min, log_max))
 
-    def _sample_drift_rate(self) -> Tuple[float, float]:
-        """Sample drift rate from a log-uniform distribution with random sign.
+    def _sample_drift_magnitude(self) -> float:
+        """Sample |drift rate| (Hz/s) from the configured distribution.
 
-        Includes a small probability of exactly zero drift (default 5%).
-        Log-uniform concentrates most samples at low |DR| (≤ 0.3 Hz/s),
-        matching the distribution of interesting candidates found so far.
+        'lognormal' (default): log10|DR| ~ Normal(log10(drift_median),
+        drift_log_sigma). Concentrates near the physical Earth+exoplanet
+        rotational scale (~0.3 Hz/s at C-band) with mild tails.
+        'loguniform': flat per decade across the full allowed range.
+        Both are clipped to [min_nonzero_drift, max_drift_rate].
+        """
+        lo, hi = self.params.min_nonzero_drift, self.params.max_drift_rate
+        dist = self.params.drift_distribution
+        if dist == 'lognormal':
+            log_mag = self.rng.normal(np.log10(self.params.drift_median),
+                                      self.params.drift_log_sigma)
+            magnitude = 10 ** log_mag
+        elif dist == 'loguniform':
+            magnitude = 10 ** self.rng.uniform(np.log10(lo), np.log10(hi))
+        else:
+            raise ValueError(
+                f"Unknown drift_distribution: {dist!r}. "
+                "Choose 'lognormal' or 'loguniform'."
+            )
+        return float(np.clip(magnitude, lo, hi))
+
+    def _sample_drift_rate(self) -> Tuple[float, float]:
+        """Sample a signed drift rate (Hz/s) and its track slope.
+
+        With probability zero_drift_prob the drift is exactly zero (models a
+        fully frequency-compensated beacon). Otherwise the magnitude is drawn
+        from the configured distribution (see _sample_drift_magnitude) and a
+        random sign is applied.
 
         Returns (drift_rate, true_slope) tuple.
         """
-        # --- ML-SRT-SETI Legacy Corner-Targeting Logic ---
-        if self.params.use_legacy_drift:
-            # We need to know where we start and total width to target opposite edges.
-            # Notice this breaks the signature a bit if start_channel/fchans are not passed here,
-            # so we handle it below in inject_signal where we have that context.
-            pass
-
-        # --- RST Log-Uniform Strategy ---
         if self.rng.random() < self.params.zero_drift_prob:
             drift_rate = 0.0
         else:
-            log_min = np.log10(self.params.min_nonzero_drift)
-            log_max = np.log10(self.params.max_drift_rate)
-            magnitude = 10 ** self.rng.uniform(log_min, log_max)
+            magnitude = self._sample_drift_magnitude()
             drift_rate = float(magnitude * self.rng.choice([-1, 1]))
 
         # Compute true_slope for metadata / intersection checks
