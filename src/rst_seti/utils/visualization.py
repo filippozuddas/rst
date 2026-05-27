@@ -216,7 +216,7 @@ def plot_cadence_panels(
     cadence: np.ndarray,
     title: str = "Cadence",
     output_path: Optional[str] = None,
-    cmap: str = "inferno",
+    cmap: str = "viridis",
     tchans_obs: int = 16,
     show: bool = False,
 ) -> plt.Figure:
