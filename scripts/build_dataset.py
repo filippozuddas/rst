@@ -71,6 +71,7 @@ def build_dataset(
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
+    hard_false_fraction: float = 0.3,
     drift_distribution: str = 'lognormal',
     drift_median: float = 0.3,
     drift_log_sigma: float = 0.5,
@@ -90,6 +91,9 @@ def build_dataset(
         snr_max: Maximum SNR for log-uniform sampling.
         eti_only_fraction: Fraction of True samples that are ETI-only (vs ETI+RFI).
         rfi_fraction: Fraction of False samples that contain injected RFI (vs pure background).
+        hard_false_fraction: Fraction of False samples that are "hard-false" traps
+            (strong signal in ALL 6 scans, no ON/OFF mask) — forces the model to
+            use ON/OFF contrast instead of mere signal presence.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -111,7 +115,23 @@ def build_dataset(
     print(f"  Loaded {len(plate)} backgrounds from {backgrounds_path}")
     print(f"  Shape: {plate.shape}")
 
-    # ---- 2. Initialize cadence generator ----
+    # Split the background plate into disjoint train/val pools BEFORE generation
+    # so that no real-observation snippet feeds both splits (prevents the model
+    # from memorizing background texture and inflating val metrics).
+    n_bg = len(plate)
+    bg_perm = rng.permutation(n_bg)
+    n_bg_val = max(1, int(round(n_bg * val_split))) if val_split > 0 else 0
+    plate_val   = plate[bg_perm[:n_bg_val]] if n_bg_val > 0 else None
+    plate_train = plate[bg_perm[n_bg_val:]]
+    if len(plate_train) == 0:
+        raise ValueError(
+            f"plate_train is empty (n_bg={n_bg}, val_split={val_split}). "
+            "Provide more backgrounds or lower --val-split."
+        )
+    print(f"  Background split (snippet-level): "
+          f"{len(plate_train)} train / {n_bg_val} val (disjoint)")
+
+    # ---- 2. Initialize cadence generators (one per split, disjoint plates) ----
     params = CadenceParams(
         fchans=fchans,
         signal_params=SignalParams(
@@ -122,12 +142,15 @@ def build_dataset(
         ),
         eti_only_fraction=eti_only_fraction,
         rfi_fraction=rfi_fraction,
+        hard_false_fraction=hard_false_fraction,
     )
-    gen = CadenceGenerator(params=params, plate=plate, seed=seed)
+    gen_train = CadenceGenerator(params=params, plate=plate_train, seed=seed)
+    gen_val   = (CadenceGenerator(params=params, plate=plate_val, seed=seed + 1)
+                 if plate_val is not None else None)
 
     # ---- 3. Generate samples ----
     total = n_true + n_false
-    sp = gen.signal_gen.params
+    sp = gen_train.signal_gen.params
     max_drift = sp.max_drift_rate
     print(f"\n  Configuration:")
     print(f"    SNR: log-uniform [{snr_min}, {snr_max}]")
@@ -138,7 +161,8 @@ def build_dataset(
         print(f"    Drift rate: log-uniform [{sp.min_nonzero_drift}, {max_drift:.2f}] Hz/s")
     print(f"    True samples: {int(eti_only_fraction*100)}% ETI-only, "
           f"{int((1-eti_only_fraction)*100)}% ETI+RFI")
-    print(f"    False samples: {int(rfi_fraction*100)}% RFI, "
+    print(f"    False samples: {int(hard_false_fraction*100)}% hard-false (trap), "
+          f"then {int(rfi_fraction*100)}% RFI / "
           f"{int((1-rfi_fraction)*100)}% pure background")
     print(f"    Seed: {seed}")
     print(f"\n  Generating {n_true} True + {n_false} False = {total} samples...")
@@ -157,10 +181,17 @@ def build_dataset(
         true_indices = all_indices[:n_true]
         false_indices = all_indices[n_true:]
 
+        # Train occupies positions [0, n_train); val occupies [n_train, total).
+        # Route each sample to the generator whose plate matches its destination
+        # split, keeping train/val backgrounds strictly disjoint.
+        n_val = int(total * val_split)
+        n_train = total - n_val
+
         # True samples (label = 1)
         print(f"\n  → True samples (ETI):")
         for idx in tqdm(true_indices, desc="    True"):
-            cadence = gen.create_true_sample_fast()
+            g = gen_train if idx < n_train else gen_val
+            cadence = g.create_true_sample_fast()
             stacked = stack_cadence(cadence)  # (96, 1024)
             spectrograms[idx] = stacked
             labels[idx] = 1
@@ -168,15 +199,13 @@ def build_dataset(
         # False samples (label = 0)
         print(f"\n  → False samples (RFI):")
         for idx in tqdm(false_indices, desc="    False"):
-            cadence = gen.create_false_sample()
+            g = gen_train if idx < n_train else gen_val
+            cadence = g.create_false_sample()
             stacked = stack_cadence(cadence)  # (96, 1024)
             spectrograms[idx] = stacked
             labels[idx] = 0
 
         spectrograms.flush()
-
-        n_val = int(total * val_split)
-        n_train = total - n_val
 
         train_specs = spectrograms[:n_train]
         train_labels = labels[:n_train]
@@ -216,12 +245,16 @@ def build_dataset(
             'zero_drift_prob': sp.zero_drift_prob,
             'eti_only_fraction': eti_only_fraction,
             'rfi_fraction': rfi_fraction,
+            'hard_false_fraction': hard_false_fraction,
             'rfi_types': ['linear', 'stationary', 'random_walk',
                           'scintillating', 'broadband', 'pulsed'],
             'freq_profiles': ['gaussian', 'sinc2', 'lorentzian', 'voigt'],
             'time_profiles': ['constant', 'scintillating_stochastic'],
             'backgrounds_path': str(backgrounds_path),
             'n_backgrounds': len(plate),
+            'background_split': 'snippet-level',
+            'n_backgrounds_train': int(len(plate_train)),
+            'n_backgrounds_val': int(n_bg_val),
         }
         meta_path = output_dir / "generation_metadata.json"
         with open(meta_path, 'w') as f:
@@ -267,6 +300,9 @@ def main():
                         help='Fraction of True samples that are ETI-only (default: 0.4)')
     parser.add_argument('--rfi-fraction', type=float, default=0.6,
                         help='Fraction of False samples that contain injected RFI (default: 0.6)')
+    parser.add_argument('--hard-false-fraction', type=float, default=0.3,
+                        help='Fraction of False samples that are hard-false traps: '
+                             'strong signal in ALL 6 scans, forces ON/OFF discrimination (default: 0.3)')
     parser.add_argument('--drift-distribution', choices=['lognormal', 'loguniform'],
                         default='lognormal',
                         help="Drift magnitude distribution (default: lognormal)")
@@ -289,6 +325,7 @@ def main():
         snr_max=args.snr_max,
         eti_only_fraction=args.eti_only_fraction,
         rfi_fraction=args.rfi_fraction,
+        hard_false_fraction=args.hard_false_fraction,
         drift_distribution=args.drift_distribution,
         drift_median=args.drift_median,
         drift_log_sigma=args.drift_log_sigma,
