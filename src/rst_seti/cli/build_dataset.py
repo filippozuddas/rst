@@ -34,6 +34,7 @@ def build_dataset(
     snr_max: float = 50.0,
     eti_only_fraction: float = 0.4,
     rfi_fraction: float = 0.6,
+    hard_false_fraction: float = 0.3,
     drift_distribution: str = 'lognormal',
     drift_median: float = 0.3,
     drift_log_sigma: float = 0.5,
@@ -56,6 +57,9 @@ def build_dataset(
         snr_max: Maximum SNR (log-uniform sampling).
         eti_only_fraction: Fraction of True samples that are ETI-only.
         rfi_fraction: Fraction of False samples with injected RFI.
+        hard_false_fraction: Fraction of False samples that are "hard-false"
+            traps (strong signal in ALL 6 scans, no ON/OFF mask) — forces the
+            model to use ON/OFF contrast instead of mere signal presence.
     """
     from rst_seti.data.cadence_generator import CadenceGenerator, CadenceParams, SignalParams
     from rst_seti.data.preprocessing import stack_cadence
@@ -104,6 +108,7 @@ def build_dataset(
         ),
         eti_only_fraction=eti_only_fraction,
         rfi_fraction=rfi_fraction,
+        hard_false_fraction=hard_false_fraction,
     )
     gen_train = CadenceGenerator(params=params, plate=plate_train, seed=seed)
     gen_val   = (CadenceGenerator(params=params, plate=plate_val, seed=seed + 1)
@@ -121,7 +126,8 @@ def build_dataset(
         print(f"    Drift rate: log-uniform [{sp.min_nonzero_drift}, {max_drift:.2f}] Hz/s")
     print(f"    True samples: {int(eti_only_fraction*100)}% ETI-only, "
           f"{int((1-eti_only_fraction)*100)}% ETI+RFI")
-    print(f"    False samples: {int(rfi_fraction*100)}% RFI, "
+    print(f"    False samples: {int(hard_false_fraction*100)}% hard-false (trap), "
+          f"then {int(rfi_fraction*100)}% RFI / "
           f"{int((1-rfi_fraction)*100)}% pure background")
     print(f"    Seed: {seed}")
     print(f"\n  Generating {n_true} True + {n_false} False = {total} samples...")
@@ -185,6 +191,7 @@ def build_dataset(
         'zero_drift_prob': sp.zero_drift_prob,
         'eti_only_fraction': eti_only_fraction,
         'rfi_fraction': rfi_fraction,
+        'hard_false_fraction': hard_false_fraction,
         'rfi_types': ['linear', 'stationary', 'random_walk',
                       'scintillating', 'broadband', 'pulsed'],
         'freq_profiles': ['gaussian', 'sinc2', 'lorentzian', 'voigt'],
@@ -241,6 +248,9 @@ Examples:
                         help='Fraction of True samples that are ETI-only (default: 0.4)')
     parser.add_argument('--rfi-fraction', type=float, default=0.6,
                         help='Fraction of False samples with injected RFI (default: 0.6)')
+    parser.add_argument('--hard-false-fraction', type=float, default=0.3,
+                        help='Fraction of False samples that are hard-false traps: '
+                             'strong signal in ALL 6 scans, forces ON/OFF discrimination (default: 0.3)')
     parser.add_argument('--drift-distribution', choices=['lognormal', 'loguniform'],
                         default='lognormal',
                         help="Drift magnitude distribution (default: lognormal)")
@@ -262,6 +272,7 @@ Examples:
         snr_max=args.snr_max,
         eti_only_fraction=args.eti_only_fraction,
         rfi_fraction=args.rfi_fraction,
+        hard_false_fraction=args.hard_false_fraction,
         drift_distribution=args.drift_distribution,
         drift_median=args.drift_median,
         drift_log_sigma=args.drift_log_sigma,
