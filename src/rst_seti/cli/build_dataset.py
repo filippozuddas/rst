@@ -78,6 +78,22 @@ def build_dataset(
     print(f"  Loaded {len(plate)} backgrounds from {backgrounds_path}")
     print(f"  Shape: {plate.shape}")
 
+    # Split the background plate into disjoint train/val pools BEFORE generation
+    # so that no real-observation snippet feeds both splits (prevents the model
+    # from memorizing background texture and inflating val metrics).
+    n_bg = len(plate)
+    bg_perm = rng.permutation(n_bg)
+    n_bg_val = max(1, int(round(n_bg * val_split))) if val_split > 0 else 0
+    plate_val   = plate[bg_perm[:n_bg_val]] if n_bg_val > 0 else None
+    plate_train = plate[bg_perm[n_bg_val:]]
+    if len(plate_train) == 0:
+        raise ValueError(
+            f"plate_train is empty (n_bg={n_bg}, val_split={val_split}). "
+            "Provide more backgrounds or lower --val-split."
+        )
+    print(f"  Background split (snippet-level): "
+          f"{len(plate_train)} train / {n_bg_val} val (disjoint)")
+
     params = CadenceParams(
         fchans=fchans,
         signal_params=SignalParams(
@@ -89,10 +105,12 @@ def build_dataset(
         eti_only_fraction=eti_only_fraction,
         rfi_fraction=rfi_fraction,
     )
-    gen = CadenceGenerator(params=params, plate=plate, seed=seed)
+    gen_train = CadenceGenerator(params=params, plate=plate_train, seed=seed)
+    gen_val   = (CadenceGenerator(params=params, plate=plate_val, seed=seed + 1)
+                 if plate_val is not None else None)
 
     total = n_true + n_false
-    sp = gen.signal_gen.params
+    sp = gen_train.signal_gen.params
     max_drift = sp.max_drift_rate
     print(f"\n  Configuration:")
     print(f"    SNR: log-uniform [{snr_min}, {snr_max}]")
@@ -116,22 +134,27 @@ def build_dataset(
     true_indices  = all_indices[:n_true]
     false_indices = all_indices[n_true:]
 
+    # Train occupies positions [0, n_train); val occupies [n_train, total).
+    # Route each sample to the generator whose plate matches its destination
+    # split, keeping train/val backgrounds strictly disjoint.
+    n_val   = int(total * val_split)
+    n_train = total - n_val
+
     print(f"\n  → True samples (ETI):")
     for idx in tqdm(true_indices, desc="    True"):
-        cadence = gen.create_true_sample_fast()
+        g = gen_train if idx < n_train else gen_val
+        cadence = g.create_true_sample_fast()
         stacked = stack_cadence(cadence)   # (96, 1024)
         spectrograms[idx] = stacked
         labels[idx] = 1
 
     print(f"\n  → False samples (RFI):")
     for idx in tqdm(false_indices, desc="    False"):
-        cadence = gen.create_false_sample()
+        g = gen_train if idx < n_train else gen_val
+        cadence = g.create_false_sample()
         stacked = stack_cadence(cadence)   # (96, 1024)
         spectrograms[idx] = stacked
         labels[idx] = 0
-
-    n_val   = int(total * val_split)
-    n_train = total - n_val
 
     train_specs  = spectrograms[:n_train]
     train_labels = labels[:n_train]
@@ -168,6 +191,9 @@ def build_dataset(
         'time_profiles': ['constant', 'scintillating_stochastic'],
         'backgrounds_path': str(backgrounds_path),
         'n_backgrounds': len(plate),
+        'background_split': 'snippet-level',
+        'n_backgrounds_train': int(len(plate_train)),
+        'n_backgrounds_val': int(n_bg_val),
     }
     meta_path = output_dir / "generation_metadata.json"
     with open(meta_path, 'w') as f:
