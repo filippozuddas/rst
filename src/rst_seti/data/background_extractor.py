@@ -292,46 +292,41 @@ class DatasetBuilder:
         """
         Extract RAW background snippets from a cadence.
         Returns array of shape (n_snippets, 6, 16, SNIPPET_WIDTH) — RAW, not normalized.
-        """
-        from blimpy import Waterfall
 
+        Memory-frugal: instead of loading the 6 multi-GB waterfalls into RAM
+        (the old blimpy full-load stacked all 6 at once → ~150 GB transient
+        peak on fine-resolution products), this reads ONLY the chosen
+        1024-channel windows directly from each HDF5 file via h5py slicing.
+        Peak memory ≈ the output array (n_snippets × 6 × 16 × 1024 float32),
+        not the full files.
+        """
         if not cadence.is_complete:
             raise ValueError(f"Cadence {cadence.target_name} is not complete")
 
-        cadence_data = []
-        for i, filepath in enumerate(cadence.files):
-            print(f"\n    Loading file {i+1}/6: {filepath.name}...", end=" ", flush=True)
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    wf = Waterfall(str(filepath))
-                data = wf.data.squeeze()
-                cadence_data.append(data)
-                print(f"✓ ({data.shape})")
-            except OSError as e:
-                print(f"❌ FAILED")
-                if "truncated file" in str(e).lower():
-                    raise OSError(f"File is truncated or corrupt: {filepath}") from e
-                raise OSError(f"Could not open HDF5 file {filepath}: {e}") from e
-            except Exception as e:
-                print(f"❌ ERROR")
-                raise RuntimeError(f"Unexpected error loading {filepath}: {e}") from e
+        # Peek dataset shapes only — h5py does not read data here, just metadata.
+        shapes = []
+        for filepath in cadence.files:
+            with h5py.File(str(filepath), 'r') as hf:
+                shapes.append(hf['data'].shape)
 
         # Some observations carry 1-2 extra integration rows (17-18 time bins
-        # instead of the canonical 16); np.stack would fail with "all input
-        # arrays must have the same shape". Truncate every obs to 16 time bins.
-        # Cadences with <16 bins are genuinely unusable and raise (skipped upstream).
-        min_t = min(d.shape[0] for d in cadence_data)
+        # instead of the canonical 16); we slice the first 16 rows from every
+        # obs. Fewer than 16 bins is genuinely unusable.
+        min_t = min(s[0] for s in shapes)
         if min_t < 16:
             raise ValueError(
                 f"Cadence {cadence.target_name} has an observation with only "
                 f"{min_t} time bins (<16); cannot use."
             )
-        cadence_data = [d[:16] for d in cadence_data]
 
-        cadence_array = np.stack(cadence_data, axis=0)
-        n_freq = cadence_array.shape[2]
+        # Common channel count across the 6 files (last axis is frequency).
+        n_freq = min(s[-1] for s in shapes)
         total_snippets = n_freq // self.snippet_width
+        if total_snippets == 0:
+            raise ValueError(
+                f"Cadence {cadence.target_name} has only {n_freq} channels "
+                f"(<{self.snippet_width}); cannot extract a snippet."
+            )
 
         if n_snippets is None:
             n_snippets = total_snippets
@@ -340,16 +335,35 @@ class DatasetBuilder:
             indices = np.random.choice(total_snippets, n_snippets, replace=False)
             indices.sort()
         else:
-            indices = range(min(n_snippets, total_snippets))
+            indices = np.arange(min(n_snippets, total_snippets))
 
-        snippets = []
-        for idx in indices:
-            start = idx * self.snippet_width
-            end = (idx + 1) * self.snippet_width
-            snippet = cadence_array[:, :, start:end]
-            snippets.append(snippet)
+        # Preallocate the output; fill it window-by-window straight from disk.
+        out = np.empty((len(indices), 6, 16, self.snippet_width), dtype=np.float32)
 
-        return np.array(snippets, dtype=np.float32)
+        for fi, filepath in enumerate(cadence.files):
+            print(f"\n    Reading file {fi+1}/6: {filepath.name}...", end=" ", flush=True)
+            try:
+                # Big raw-data chunk cache: indices are sorted, so a generous
+                # cache lets adjacent windows reuse an already-decompressed
+                # chunk instead of re-inflating it on every read.
+                with h5py.File(str(filepath), 'r', rdcc_nbytes=256 * 1024 * 1024) as hf:
+                    dset = hf['data']                  # (n_int, [n_if], n_chan)
+                    three_d = dset.ndim == 3
+                    for si, idx in enumerate(indices):
+                        start = idx * self.snippet_width
+                        end = start + self.snippet_width
+                        if three_d:
+                            out[si, fi] = dset[:16, 0, start:end]
+                        else:
+                            out[si, fi] = dset[:16, start:end]
+                print("✓")
+            except OSError as e:
+                print(f"❌ FAILED")
+                if "truncated file" in str(e).lower():
+                    raise OSError(f"File is truncated or corrupt: {filepath}") from e
+                raise OSError(f"Could not open HDF5 file {filepath}: {e}") from e
+
+        return out
 
     def build_training_dataset(self,
                                cadences: List[CadenceInfo] = None,
@@ -375,42 +389,54 @@ class DatasetBuilder:
         print(f"  Max total: {max_total_snippets}")
         print(f"  Output shape: (N, 6, 16, {self.snippet_width})")
 
-        all_snippets = []
+        # Preallocate the full output once and fill it cadence-by-cadence.
+        # The old code accumulated every cadence's snippets in a Python list and
+        # then np.concatenate'd them — that held ~all snippets in RAM AND
+        # momentarily doubled them during the concatenate. Combined with the
+        # per-cadence full-file load it blew past 250 GB → OOM. Now we hold at
+        # most: the preallocated result + one cadence's small temp array.
+        per_cadence_n = [
+            min(snippets_per_cadence, c.get_n_snippets(self.snippet_width))
+            for c in cadences
+        ]
+        capacity = min(max_total_snippets, sum(per_cadence_n))
+        if capacity == 0:
+            raise ValueError("No snippets extracted")
+
+        dataset = np.empty((capacity, 6, 16, self.snippet_width), dtype=np.float32)
         metadata = []
+        pos = 0
 
-        for cadence in tqdm(cadences, desc="Processing"):
+        for cadence, n_to_extract in zip(tqdm(cadences, desc="Processing"), per_cadence_n):
+            if pos >= capacity:
+                break
+            if n_to_extract == 0:
+                continue
+            n_to_extract = min(n_to_extract, capacity - pos)
             try:
-                n_to_extract = min(snippets_per_cadence, cadence.get_n_snippets(self.snippet_width))
-                if n_to_extract == 0:
-                    continue
-
                 snippets = self.extract_backgrounds(
                     cadence,
                     n_snippets=n_to_extract,
                     random_sample=True
                 )
-
-                all_snippets.append(snippets)
-                metadata.extend([{
-                    'target': cadence.target_name,
-                    'date': cadence.date
-                }] * len(snippets))
-
-                if sum(len(s) for s in all_snippets) >= max_total_snippets:
-                    break
-
             except Exception as e:
                 print(f"  Error: {cadence.target_name}: {e}")
                 continue
 
-        if not all_snippets:
+            k = len(snippets)
+            dataset[pos:pos + k] = snippets
+            pos += k
+            metadata.extend([{
+                'target': cadence.target_name,
+                'date': cadence.date
+            }] * k)
+            del snippets
+
+        if pos == 0:
             raise ValueError("No snippets extracted")
 
-        dataset = np.concatenate(all_snippets, axis=0)
-
-        if len(dataset) > max_total_snippets:
-            indices = np.random.choice(len(dataset), max_total_snippets, replace=False)
-            dataset = dataset[indices]
+        # Trim to what was actually filled (view into the preallocated buffer).
+        dataset = dataset[:pos]
 
         # Save
         output_path = self.output_dir / f"{output_name}.npz"
