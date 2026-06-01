@@ -20,6 +20,14 @@ from typing import List, Dict, Optional, Callable
 from dataclasses import dataclass, field
 import json
 import h5py
+# Register the bitshuffle/LZ4 HDF5 filters that Breakthrough Listen .h5 files
+# are compressed with. Reading their 'data' with bare h5py otherwise fails
+# ("can't open directory /usr/local/hdf5/lib/plugin"). blimpy used to pull this
+# in for us; now that we read via h5py directly we must import it ourselves.
+try:
+    import hdf5plugin  # noqa: F401
+except ImportError:
+    pass
 from tqdm import tqdm
 import warnings
 
