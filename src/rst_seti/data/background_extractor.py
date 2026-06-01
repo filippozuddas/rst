@@ -219,6 +219,25 @@ class DatasetBuilder:
         if invalid_count > 0:
             print(f"  (Skipped {invalid_count} incomplete/invalid cadences)")
 
+        # Deduplicate cadences that point to the SAME observation files under
+        # different parent directories. turboSETI re-organizes each cadence into
+        # SNR5/SNR10/SNR20 output folders (verified identical by md5); the
+        # parent-dir component of the grouping key would otherwise count each
+        # copy as a distinct cadence and over-represent it in training.
+        deduped = {}
+        seen_filesets = set()
+        n_dups = 0
+        for key, cad in cadences.items():
+            fileset = tuple(sorted(f.name for f in cad.files))
+            if fileset in seen_filesets:
+                n_dups += 1
+                continue
+            seen_filesets.add(fileset)
+            deduped[key] = cad
+        if n_dups > 0:
+            print(f"  (Deduplicated {n_dups} cadences with identical file sets)")
+        cadences = deduped
+
         self.cadences = cadences
         return cadences
 
@@ -297,6 +316,18 @@ class DatasetBuilder:
             except Exception as e:
                 print(f"❌ ERROR")
                 raise RuntimeError(f"Unexpected error loading {filepath}: {e}") from e
+
+        # Some observations carry 1-2 extra integration rows (17-18 time bins
+        # instead of the canonical 16); np.stack would fail with "all input
+        # arrays must have the same shape". Truncate every obs to 16 time bins.
+        # Cadences with <16 bins are genuinely unusable and raise (skipped upstream).
+        min_t = min(d.shape[0] for d in cadence_data)
+        if min_t < 16:
+            raise ValueError(
+                f"Cadence {cadence.target_name} has an observation with only "
+                f"{min_t} time bins (<16); cannot use."
+            )
+        cadence_data = [d[:16] for d in cadence_data]
 
         cadence_array = np.stack(cadence_data, axis=0)
         n_freq = cadence_array.shape[2]

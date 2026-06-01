@@ -94,6 +94,16 @@ def load_cadence_from_files(file_paths: list) -> tuple:
             print(f"❌ ERROR")
             raise RuntimeError(f"Unexpected error loading {fpath}: {e}") from e
 
+    # Truncate every observation to the canonical 16 time bins; some files
+    # carry 1-2 extra integration rows (17-18) which would break np.stack.
+    min_t = min(d.shape[0] for d in cadence_data)
+    if min_t < 16:
+        raise ValueError(
+            f"Cadence {target_name} has an observation with only {min_t} "
+            f"time bins (<16); cannot use."
+        )
+    cadence_data = [d[:16] for d in cadence_data]
+
     cadence_array = np.stack(cadence_data, axis=0)
     return cadence_array, freq_start_mhz, freq_resolution_mhz, target_name
 
