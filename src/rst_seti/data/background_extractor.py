@@ -456,7 +456,15 @@ def main():
     parser.add_argument('--mix-bins', type=float, default=1000.0,
                         help='Bin size in MHz for balancing a mixed dataset (default: 1000)')
     parser.add_argument('--cadences-per-bin', type=int, default=10,
-                        help='Number of cadences to sample from each frequency bin when using --band mixed')
+                        help='(legacy) Fixed cadences per bin; --band mixed now uses --train-fraction')
+    parser.add_argument('--train-fraction', type=float, default=0.5,
+                        help='Fraction of cadences per bin used for training in --band mixed; '
+                             'the rest are held out for inference (default: 0.5)')
+    parser.add_argument('--exclude-targets', nargs='+', default=None,
+                        help='Target names (e.g. TIC368536386) to keep OUT of training backgrounds; '
+                             'routed to the inference pool instead')
+    parser.add_argument('--seed', type=int, default=None,
+                        help='Random seed for reproducible cadence selection')
     parser.add_argument('--training-cadences', '-t', type=int, default=None,
                         help='Number of cadences for training (rest for inference)')
     parser.add_argument('--list-only', action='store_true',
@@ -490,34 +498,51 @@ def main():
         if not complete_cadences:
             print("No complete cadences found.")
             return
-            
+
+        import random
+        if args.seed is not None:
+            random.seed(args.seed)
+
+        # Hold out explicitly-excluded targets (e.g. the benchmark) from training:
+        # they go straight to the inference pool and never feed the background set.
+        exclude = set(args.exclude_targets or [])
+        excluded_cadences = [c for c in complete_cadences if c.target_name in exclude]
+        complete_cadences = [c for c in complete_cadences if c.target_name not in exclude]
+        if excluded_cadences:
+            print(f"  Excluded {len(excluded_cadences)} cadence(s) from training "
+                  f"(targets: {sorted(exclude)}) → inference pool")
+
         # Group by frequency bin
         by_freq = defaultdict(list)
         for c in complete_cadences:
             # e.g., 4800 -> 5000, 6100 -> 6000
             bin_mhz = round(c.freq_start / args.mix_bins) * args.mix_bins
             by_freq[bin_mhz].append(c)
-            
+
         selected_cadences = []
-        inference_cadences = []
-        print(f"Balancing dataset across {len(by_freq)} frequency bins:")
+        inference_cadences = list(excluded_cadences)
+        print(f"Splitting each of {len(by_freq)} frequency bins "
+              f"{args.train_fraction:.0%} train / {1 - args.train_fraction:.0%} inference:")
         for bin_mhz in sorted(by_freq.keys()):
             cads = by_freq[bin_mhz]
-            # Take up to cadences_per_bin
-            n_take = min(args.cadences_per_bin, len(cads))
-            
-            # Use random sampling to avoid always picking the same ones if we run it multiple times
-            import random
+            # floor() → at least half of every bin is held out for inference
+            n_take = int(len(cads) * args.train_fraction)
             selected = random.sample(cads, n_take)
-            
+
             # Keep track of which ones were NOT selected, for inference testing
+            selected_ids = {id(c) for c in selected}
             for c in cads:
-                if c not in selected:
+                if id(c) not in selected_ids:
                     inference_cadences.append(c)
-            
+
             selected_cadences.extend(selected)
-            print(f"  - ~{bin_mhz/1000:.1f} GHz: Selected {n_take}/{len(cads)} cadences for training (Left {len(cads)-n_take} for inference)")
-            
+            print(f"  - ~{bin_mhz/1000:.1f} GHz: {n_take}/{len(cads)} train, "
+                  f"{len(cads) - n_take} inference")
+
+        # Shuffle so the snippet-budget cap (if ever hit) doesn't systematically
+        # starve whichever frequency bin is processed last.
+        random.shuffle(selected_cadences)
+
         # Save the list of inference cadences
         if inference_cadences:
             inference_path = builder.output_dir / "inference_cadences_mixed.txt"
