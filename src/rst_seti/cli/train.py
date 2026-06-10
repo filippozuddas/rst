@@ -57,6 +57,7 @@ Examples:
     m_cfg   = config['model']
     d_cfg   = config['data']
     t_cfg   = config['training']
+    a_cfg   = config['augmentation']
 
     # ── Device ─────────────────────────────────────────────────────────────
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -89,13 +90,13 @@ Examples:
 
     # ── Dataloaders ────────────────────────────────────────────────────────
     train_loader, val_loader = create_dataloaders(
-        train_path=d_cfg['train_path'],
-        val_path=d_cfg['val_path'],
+        train_path=d_cfg['train_data'],
+        val_path=d_cfg['val_data'],
         batch_size=t_cfg['batch_size'],
         num_workers=d_cfg.get('num_workers', 4),
-        mixup_alpha=t_cfg.get('mixup_alpha', 0.0),
-        freq_mask_param=t_cfg.get('freq_mask_param', 0),
-        time_mask_param=t_cfg.get('time_mask_param', 0),
+        freq_mask=a_cfg.get('freq_mask', 0),
+        time_mask=a_cfg.get('time_mask', 0),
+        mixup_alpha=a_cfg.get('mixup_alpha', 0.0),
     )
 
     # ── Train ──────────────────────────────────────────────────────────────
