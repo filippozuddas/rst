@@ -456,6 +456,9 @@ Examples:
             return
 
         print(f"\n🔬 Processing {len(cadence_entries)} cadence(s)...")
+        # Reused only to derive the observation date from the filename
+        # (parse_filename is the single source of truth for date parsing).
+        meta_parser = DatasetBuilder(output_dir=str(output_dir))
 
         for idx, entry in enumerate(cadence_entries, 1):
             target = entry['target_name']
@@ -467,7 +470,21 @@ Examples:
             try:
                 cadence, freq_start, freq_res, _ = load_cadence_from_files(files)
 
-                cadence_dir = output_dir / target
+                # Disambiguate cadences sharing a target name: tag the output
+                # folder with the start frequency AND the observation date.
+                # Frequency separates different bands; the date separates
+                # different epochs of the same band. A numeric suffix is the
+                # last-resort guard if even those collide.
+                freq_tag = f"{freq_start:.0f}MHz" if freq_start > 0 else "nofreq"
+                info = meta_parser.parse_filename(Path(files[0]))
+                date_tag = info['date'] if info else "nodate"
+                cadence_id = f"{target}_{freq_tag}_{date_tag}"
+                cadence_dir = output_dir / cadence_id
+                dup = 2
+                while cadence_dir.exists():
+                    cadence_id = f"{target}_{freq_tag}_{date_tag}_{dup}"
+                    cadence_dir = output_dir / cadence_id
+                    dup += 1
                 cadence_dir.mkdir(parents=True, exist_ok=True)
 
                 results, clusters = process_cadence(
@@ -480,9 +497,11 @@ Examples:
 
                 if not results.empty:
                     results['target'] = target
+                    results['cadence_id'] = cadence_id
                     all_results.append(results)
                 if not clusters.empty:
                     clusters['target'] = target
+                    clusters['cadence_id'] = cadence_id
                     all_clusters.append(clusters)
 
             except Exception as e:
