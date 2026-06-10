@@ -65,7 +65,7 @@ Examples:
     # Delegate to evaluate.py logic (import from scripts or inline)
     try:
         # Try importing the evaluate script if repo layout is available
-        _scripts = Path(__file__).resolve().parents[4] / "scripts"
+        _scripts = Path(__file__).resolve().parents[3] / "scripts"
         if _scripts.exists():
             sys.path.insert(0, str(_scripts.parent))
             from scripts.evaluate import main as _eval_main
