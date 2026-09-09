@@ -16,14 +16,16 @@ from dataclasses import dataclass, field
 
 # Available RFI types for False sample generation
 RFI_TYPES: List[str] = [
-    'linear',        # Standard linear drift (same as ETI but in all obs)
-    'stationary',    # Fixed frequency with jitter
-    'random_walk',   # Frequency wanders randomly over time
-    'scintillating'  # Intensity oscillates sinusoidally over time
+    'linear',         # Standard linear drift (same as ETI but in all obs)
+    'stationary',     # Fixed frequency with jitter
+    'random_walk',    # Frequency wanders randomly over time
+    'scintillating',  # Intensity modulated by a stochastic (red-noise) envelope
+    'broadband',      # Wide-band terrestrial RFI (covers many channels)
+    'pulsed'          # Periodic on/off pulses (radar/beacon)
 ]
 
 # Default weights for weighted RFI type selection
-RFI_TYPE_WEIGHTS: List[float] = [0.40, 0.15, 0.25, 0.20]
+RFI_TYPE_WEIGHTS: List[float] = [0.28, 0.12, 0.17, 0.13, 0.18, 0.12]
 
 def compute_max_drift_rate(
     snippet_width: int, df: float, dt: float, n_scans: int = 4, bins_per_scan: int = 16
@@ -53,9 +55,11 @@ class SignalParams:
     df: float = 2.7939677238464355  # Hz per channel
     dt: float = 18.25361108         # Seconds per time bin
     fch1: float = 0                 # MHz (0 for injection on existing data)
+    tchans_per_obs: int = 16        # Time bins per single observation (for per-ON SNR)
 
-    # SNR parameters — log-uniform sampling in [snr_min, snr_max]
-    snr_min: float = 10.0
+    # SNR parameters — log-uniform sampling in [snr_min, snr_max].
+    # Convention: label = SNR visible in a SINGLE ON scan (turboSETI-style).
+    snr_min: float = 5.0
     snr_max: float = 50.0
 
     # ETI width parameters — narrowband (|DR|×dt + U(eti_offset_min, eti_offset_max))
@@ -66,26 +70,46 @@ class SignalParams:
     rfi_width_offset_min: float = 1.0    # Hz (Reduced from 5.0 to overlap fully with ETI range)
     rfi_width_offset_max: float = 55.0   # Hz
 
-    # Drift rate parameters — log-uniform with random sign
+    # Drift rate parameters — magnitude × random sign, clipped to
+    # [min_nonzero_drift, max_drift_rate]. max is geometric (window-limited).
     max_drift_rate: float = field(
         default_factory=lambda: compute_max_drift_rate(
             snippet_width=1024, df=2.7939677238464355, dt=18.25361108, n_scans=4
         )
     )
-    min_nonzero_drift: float = 0.01  # Min non-zero drift rate for log sampling
-    zero_drift_prob: float = 0.05    # Probability of exactly zero drift
+    min_nonzero_drift: float = 0.01  # Min non-zero |DR| (Hz/s); sampler floor
+    zero_drift_prob: float = 0.05    # P(exactly zero drift) — compensated beacon
 
-    # Frequency profile selection
-    freq_profiles: tuple = ('gaussian', 'sinc2')
-    freq_profile_weights: tuple = (0.8, 0.2)
+    # Drift magnitude distribution: 'lognormal' (default, physically motivated:
+    # concentrates near the Earth+exoplanet rotational scale ~0.3 Hz/s at C-band)
+    # or 'loguniform' (flat per decade — broader coverage of fast drifters).
+    drift_distribution: str = 'lognormal'
+    drift_median: float = 0.3        # Hz/s — geometric centre of the log-normal
+    drift_log_sigma: float = 0.5     # spread in dex; ±1σ ≈ [0.095, 0.95] Hz/s
+
+    # Frequency profile selection (ETI only — scattering reshapes celestial signals)
+    freq_profiles: tuple = ('gaussian', 'sinc2', 'lorentzian', 'voigt')
+    freq_profile_weights: tuple = (0.55, 0.10, 0.20, 0.15)
+
+    # Exo-IPM / ISM scattering: Lorentzian-wing broadening (FWHM range, Hz).
+    # Added to ETI Lorentzian/Voigt profiles only (RFI is local, unscattered).
+    scatter_width_min: float = 3.0
+    scatter_width_max: float = 40.0
 
     # Temporal profile selection
     time_profiles: tuple = ('constant', 'scintillating')
     time_profile_weights: tuple = (0.6, 0.4)
 
+    # Stochastic scintillation (red-noise AR(1) amplitude modulation)
+    scint_timescale_min: float = 60.0    # s — correlation timescale
+    scint_timescale_max: float = 600.0   # s
+    scint_depth_min: float = 0.2         # log-amplitude modulation depth
+    scint_depth_max: float = 0.6
+
     # RFI type weights
-    rfi_types: tuple = ('linear', 'stationary', 'random_walk', 'scintillating')
-    rfi_type_weights: tuple = (0.40, 0.15, 0.25, 0.20)
+    rfi_types: tuple = ('linear', 'stationary', 'random_walk',
+                        'scintillating', 'broadband', 'pulsed')
+    rfi_type_weights: tuple = (0.28, 0.12, 0.17, 0.13, 0.18, 0.12)
 
     # Legacy ML-SRT-SETI behavior
     use_legacy_drift: bool = False   # If True, overrides log-uniform sampling with geometric corner-targeting
@@ -99,11 +123,18 @@ class SignalGenerator:
         inject_rfi_signal: Diverse RFI patterns (for False samples)
 
     Sampling strategies:
-        - SNR: log-uniform in [snr_min, snr_max] (more low-SNR samples)
-        - Drift rate: log-uniform in [min_nonzero, max] with random sign
-          (concentrates on low drift rates as seen in real candidates)
-        - Freq profile: weighted random (gaussian 80%, sinc² 20%)
-        - Time profile: weighted random (constant 60%, scintillating 40%)
+        - SNR: log-uniform in [snr_min, snr_max] (more low-SNR samples).
+          Convention: the label is the SNR visible in a SINGLE ON scan.
+        - Drift rate: magnitude from a configurable distribution (default
+          log-normal centred on drift_median ≈ 0.3 Hz/s, the Earth+exoplanet
+          rotational scale at C-band) × random sign, plus a small chance of
+          exactly zero (compensated beacon). 'loguniform' is also available.
+        - Freq profile (ETI): weighted random over gaussian / sinc² / lorentzian /
+          voigt. Lorentzian & Voigt model exo-IPM/ISM scattering wings and are
+          used for ETI only (RFI is local and unscattered).
+        - Time profile: constant or 'scintillating' = stochastic (red-noise,
+          unit-mean) amplitude modulation. Regular periodicity lives only in the
+          'pulsed' RFI type.
     """
 
     def __init__(self, params: Optional[SignalParams] = None, seed: Optional[int] = None):
@@ -124,29 +155,44 @@ class SignalGenerator:
         log_max = np.log10(self.params.snr_max)
         return float(10 ** self.rng.uniform(log_min, log_max))
 
-    def _sample_drift_rate(self) -> Tuple[float, float]:
-        """Sample drift rate from a log-uniform distribution with random sign.
+    def _sample_drift_magnitude(self) -> float:
+        """Sample |drift rate| (Hz/s) from the configured distribution.
 
-        Includes a small probability of exactly zero drift (default 5%).
-        Log-uniform concentrates most samples at low |DR| (≤ 0.3 Hz/s),
-        matching the distribution of interesting candidates found so far.
+        'lognormal' (default): log10|DR| ~ Normal(log10(drift_median),
+        drift_log_sigma). Concentrates near the physical Earth+exoplanet
+        rotational scale (~0.3 Hz/s at C-band) with mild tails.
+        'loguniform': flat per decade across the full allowed range.
+        Both are clipped to [min_nonzero_drift, max_drift_rate].
+        """
+        lo, hi = self.params.min_nonzero_drift, self.params.max_drift_rate
+        dist = self.params.drift_distribution
+        if dist == 'lognormal':
+            log_mag = self.rng.normal(np.log10(self.params.drift_median),
+                                      self.params.drift_log_sigma)
+            magnitude = 10 ** log_mag
+        elif dist == 'loguniform':
+            magnitude = 10 ** self.rng.uniform(np.log10(lo), np.log10(hi))
+        else:
+            raise ValueError(
+                f"Unknown drift_distribution: {dist!r}. "
+                "Choose 'lognormal' or 'loguniform'."
+            )
+        return float(np.clip(magnitude, lo, hi))
+
+    def _sample_drift_rate(self) -> Tuple[float, float]:
+        """Sample a signed drift rate (Hz/s) and its track slope.
+
+        With probability zero_drift_prob the drift is exactly zero (models a
+        fully frequency-compensated beacon). Otherwise the magnitude is drawn
+        from the configured distribution (see _sample_drift_magnitude) and a
+        random sign is applied.
 
         Returns (drift_rate, true_slope) tuple.
         """
-        # --- ML-SRT-SETI Legacy Corner-Targeting Logic ---
-        if self.params.use_legacy_drift:
-            # We need to know where we start and total width to target opposite edges.
-            # Notice this breaks the signature a bit if start_channel/fchans are not passed here,
-            # so we handle it below in inject_signal where we have that context.
-            pass
-
-        # --- RST Log-Uniform Strategy ---
         if self.rng.random() < self.params.zero_drift_prob:
             drift_rate = 0.0
         else:
-            log_min = np.log10(self.params.min_nonzero_drift)
-            log_max = np.log10(self.params.max_drift_rate)
-            magnitude = 10 ** self.rng.uniform(log_min, log_max)
+            magnitude = self._sample_drift_magnitude()
             drift_rate = float(magnitude * self.rng.choice([-1, 1]))
 
         # Compute true_slope for metadata / intersection checks
@@ -201,11 +247,56 @@ class SignalGenerator:
                                   self.params.rfi_width_offset_max)
         return drift_component + offset
 
-    def _select_f_profile(self, width: float):
-        """Select frequency profile based on configured weights.
+    def _intensity_per_on(self, frame, snr: float) -> float:
+        """Intensity for a target SNR *visible in a single ON scan*.
 
-        Returns a setigen frequency profile function.
-        Available profiles: gaussian (default), sinc² (sinc2).
+        setigen calibrates get_intensity over the full frame (frame.tchans, here
+        96 stacked bins): get_intensity(X) = X·σ/√tchans. But an ETI signal is
+        retained only in the ON scans and a single ON spans tchans_per_obs (16)
+        bins. We rescale by √(tchans / tchans_per_obs) = √6 so the label SNR
+        equals the per-ON-scan visible SNR (turboSETI convention). Applied to
+        RFI too, so "SNR" means the same thing across the dataset.
+        """
+        factor = np.sqrt(frame.tchans / self.params.tchans_per_obs)
+        return frame.get_intensity(snr=snr * factor)
+
+    def _make_stochastic_t_profile(self, level: float, n_bins: int):
+        """Stochastic (red-noise) amplitude modulation, unit-mean.
+
+        Models scintillation as a correlated AR(1) process in log-amplitude
+        (log-normal envelope) with a characteristic timescale, rather than a
+        clean sine — a regular sinusoid is a synthetic fingerprint the model can
+        learn. E[envelope] = 1, so the time-averaged level stays at `level` and
+        the SNR calibration is preserved. The realization spans the full stacked
+        frame, so it stays coherent across ON1/ON2/ON3.
+        """
+        dt = self.params.dt
+        tau = self.rng.uniform(self.params.scint_timescale_min,
+                               self.params.scint_timescale_max)
+        depth = self.rng.uniform(self.params.scint_depth_min,
+                                 self.params.scint_depth_max)
+        rho = np.exp(-dt / tau)
+        x = np.zeros(n_bins)
+        x[0] = self.rng.standard_normal()
+        for i in range(1, n_bins):
+            x[i] = rho * x[i - 1] + np.sqrt(1.0 - rho ** 2) * self.rng.standard_normal()
+        envelope = np.exp(depth * x - depth ** 2 / 2.0)  # log-normal, E[env]=1
+        series = level * envelope
+        t_grid = np.arange(n_bins) * dt
+
+        def t_profile(t):
+            t = np.atleast_1d(np.asarray(t, dtype=float))
+            return np.interp(t, t_grid, series)
+
+        return t_profile
+
+    def _select_f_profile(self, width: float):
+        """Select frequency profile based on configured weights (ETI only).
+
+        Available profiles: gaussian, sinc², lorentzian, voigt. Lorentzian and
+        Voigt model exo-IPM / ISM scattering, which broadens narrowband celestial
+        signals with Lorentzian wings; RFI is local and unscattered, so it never
+        uses these (handled inline in inject_rfi_signal).
         """
         profiles = list(self.params.freq_profiles)
         weights = list(self.params.freq_profile_weights)
@@ -215,28 +306,33 @@ class SignalGenerator:
             return stg.gaussian_f_profile(width=width * u.Hz), choice
         elif choice == 'sinc2':
             return stg.sinc2_f_profile(width=width * u.Hz), choice
+        elif choice == 'lorentzian':
+            scatter = self.rng.uniform(self.params.scatter_width_min,
+                                       self.params.scatter_width_max)
+            return stg.lorentzian_f_profile(width=(width + scatter) * u.Hz), choice
+        elif choice == 'voigt':
+            scatter = self.rng.uniform(self.params.scatter_width_min,
+                                       self.params.scatter_width_max)
+            return stg.voigt_f_profile(g_width=width * u.Hz,
+                                       l_width=scatter * u.Hz), choice
         else:
             # Fallback to gaussian for unknown profiles
             return stg.gaussian_f_profile(width=width * u.Hz), 'gaussian'
 
-    def _select_t_profile(self, intensity: float):
+    def _select_t_profile(self, intensity: float, n_bins: int):
         """Select temporal profile based on configured weights.
 
-        Returns a setigen temporal profile function.
-        Available profiles: constant, scintillating (sine modulation).
+        Available profiles: constant, scintillating (stochastic red-noise
+        amplitude modulation). The sine modulation was removed: a clean periodic
+        ripple is a synthetic fingerprint the model can latch onto. Physical
+        periodicity now lives only in the 'pulsed' RFI type.
         """
         profiles = list(self.params.time_profiles)
         weights = list(self.params.time_profile_weights)
         choice = self.rng.choice(profiles, p=weights)
 
-        if choice == 'constant':
-            return stg.constant_t_profile(level=intensity), choice
-        elif choice == 'scintillating':
-            period = self.rng.uniform(50, 300) * u.s
-            amplitude = intensity * self.rng.uniform(0.2, 0.5)
-            return stg.sine_t_profile(period=period,
-                                       amplitude=amplitude,
-                                       level=intensity), choice
+        if choice == 'scintillating':
+            return self._make_stochastic_t_profile(intensity, n_bins), 'scintillating_stochastic'
         else:
             return stg.constant_t_profile(level=intensity), 'constant'
 
@@ -311,11 +407,11 @@ class SignalGenerator:
         b = tchans - true_slope * start_channel
 
         frame = self._make_frame(data)
-        intensity = frame.get_intensity(snr=snr)
+        intensity = self._intensity_per_on(frame, snr)
 
         # Select profiles
         f_profile, f_profile_name = self._select_f_profile(width)
-        t_profile, t_profile_name = self._select_t_profile(intensity)
+        t_profile, t_profile_name = self._select_t_profile(intensity, tchans)
 
         frame.add_signal(
             stg.constant_path(
@@ -379,7 +475,7 @@ class SignalGenerator:
         start_channel = self.rng.integers(1, fchans - 1)
         frame = self._make_frame(data)
         f_start = frame.get_frequency(index=start_channel)
-        intensity = frame.get_intensity(snr=snr)
+        intensity = self._intensity_per_on(frame, snr)
 
         # Build path, t_profile, f_profile based on RFI type
         if rfi_type == 'linear':
@@ -421,19 +517,43 @@ class SignalGenerator:
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
 
         elif rfi_type == 'scintillating':
-            # Intensity oscillates sinusoidally over time
+            # Intensity modulated by a stochastic (red-noise) envelope
             if self.params.use_legacy_drift:
                 drift_rate, _ = self._calculate_legacy_drift_rate(start_channel, fchans, tchans)
             else:
                 drift_rate, _ = self._sample_drift_rate()
             width = self._calculate_rfi_width(drift_rate)
-            period = self.rng.uniform(50, 300) * u.s
-            amplitude = intensity * self.rng.uniform(0.3, 0.8)
             path = stg.constant_path(f_start=f_start,
                                      drift_rate=drift_rate * u.Hz / u.s)
-            t_prof = stg.sine_t_profile(period=period,
-                                        amplitude=amplitude,
-                                        level=intensity)
+            t_prof = self._make_stochastic_t_profile(intensity, tchans)
+            f_prof = stg.gaussian_f_profile(width=width * u.Hz)
+
+        elif rfi_type == 'broadband':
+            # Wide-band terrestrial RFI: spans many channels, ~stationary in freq
+            drift_rate = self.rng.uniform(-0.1, 0.1)
+            bb_width = self.rng.uniform(400, 2000) * u.Hz
+            path = stg.constant_path(f_start=f_start,
+                                     drift_rate=drift_rate * u.Hz / u.s)
+            t_prof = stg.constant_t_profile(level=intensity)
+            f_prof = stg.box_f_profile(width=bb_width)
+
+        elif rfi_type == 'pulsed':
+            # Periodic on/off pulses (radar/beacon), narrowband in frequency
+            drift_rate = self.rng.uniform(-0.05, 0.05)
+            width = self._calculate_rfi_width(drift_rate)
+            period = self.rng.uniform(40, 120) * u.s
+            pulse_width = self.rng.uniform(15, 40) * u.s
+            path = stg.constant_path(f_start=f_start,
+                                     drift_rate=drift_rate * u.Hz / u.s)
+            t_prof = stg.periodic_gaussian_t_profile(
+                pulse_width=pulse_width,
+                period=period,
+                pulse_direction='up',
+                amplitude=intensity,
+                level=0.0,
+                min_level=0.0,
+                seed=int(self.rng.integers(0, 2**31)),
+            )
             f_prof = stg.gaussian_f_profile(width=width * u.Hz)
 
         else:

@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rst-seti"
+version = "0.1.0"
+description = "Radio Spectrogram Transformer — Transformer-based technosignature detection in radio observations (SETI)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "Filippo Zuddas" },
+]
+keywords = ["seti", "radio-astronomy", "deep-learning", "transformer", "technosignature", "spectrogram"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+# Core dependencies — always required
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "torchaudio>=2.0.0",
+    "timm==1.0.15",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pandas>=2.0.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.60.0",
+    "matplotlib>=3.7.0",
+    "blimpy>=2.1.4",
+    "h5py>=3.8.0",
+    "huggingface-hub>=0.20.0",
+    "setuptools>=70.0.0",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+# Full training + dataset generation pipeline
+train = [
+    "setigen>=2.7.0",
+    "scikit-learn>=1.2.0",
+]
+# Everything
+all = ["rst-seti[train]"]
+
+[project.scripts]
+rst-infer             = "rst_seti.cli.infer:main"
+rst-train             = "rst_seti.cli.train:main"
+rst-eval              = "rst_seti.cli.evaluate:main"
+rst-build-backgrounds = "rst_seti.cli.build_backgrounds:main"
+rst-build-dataset     = "rst_seti.cli.build_dataset:main"
+
+[project.urls]
+"Homepage"    = "https://github.com/filippozuddas/rst"
+"Bug Tracker" = "https://github.com/filippozuddas/rst/issues"
+
+# --- Setuptools configuration ---
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rst_seti = ["configs/*.yaml"]

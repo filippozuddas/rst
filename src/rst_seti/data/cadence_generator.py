@@ -8,7 +8,7 @@ ON-OFF pattern.
 
 Key design choices (PDR v2):
 - True samples: 40% ETI-only (single signal in ON) +
-                60% ETI + 1-3 disturbance RFI (across all obs)
+                60% ETI + 1-2 disturbance RFI (across all obs)
 - False samples: 60% with injected RFI (1-4 signals), 40% pure background
 - Background: only real plates from HDF5 (NoiseGenerator removed)
 """
@@ -48,7 +48,7 @@ class CadenceGenerator:
     Creates three types of samples:
     - True: ETI signal present in ON observations only
       - ETI-only (40%): single ETI signal in ON obs
-      - ETI+RFI (60%): ETI in ON + 1-3 RFI across all obs
+      - ETI+RFI (60%): ETI in ON + 1-2 RFI across all obs
     - False: 60% RFI (1-4 signals across all obs), 40% pure real background
     - SingleShot: Single signal injection for sensitivity testing
 
@@ -140,7 +140,7 @@ class CadenceGenerator:
 
         Selects between two modes:
         - ETI-only (40%): single ETI signal in ON obs, background in OFF
-        - ETI+RFI (60%): ETI in ON + 1-3 RFI across all obs
+        - ETI+RFI (60%): ETI in ON + 1-2 RFI across all obs
 
         Returns (cadence shape (6, tchans, fchans), metadata dict).
         """
@@ -182,13 +182,13 @@ class CadenceGenerator:
     def _create_eti_with_rfi_sample(self,
                                     snr: Optional[float] = None) -> Tuple[np.ndarray, dict]:
         """
-        ETI signal in ON observations + 1-3 RFI signals across ALL observations.
+        ETI signal in ON observations + 1-2 RFI signals across ALL observations.
         Simulates a realistic scenario where the ETI signal coexists with RFI.
         """
         background = self._get_background()
         stacked = self._stack_cadence(background)
 
-        # Step 1: inject 1-3 RFI signals across all observations
+        # Step 1: inject 1-2 RFI signals across all observations
         n_rfi = self.rng.integers(1, self.params.max_disturbance_rfi + 1)
         rfi_infos = []
         current = stacked.copy()

@@ -1,0 +1,52 @@
+# Git
+.git
+.gitignore
+.gitmodules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.env/
+env/
+ENV/
+.conda/
+conda/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific data (mount these via volumes at runtime instead)
+data/
+results/
+checkpoints/
+logs/
+*.npz
+*.h5
+*.hdf5
+*.pth
+*.pt

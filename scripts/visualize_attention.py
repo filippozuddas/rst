@@ -20,11 +20,11 @@ import torch
 from pathlib import Path
 
 # Add project root to path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
 
-from src.models.rst_model import RSTModel
-from src.data.dataset import SETIDataset
-from src.utils.visualization import AttentionExtractor, plot_attention_map
+from rst_seti.models.rst_model import RSTModel
+from rst_seti.data.dataset import SETIDataset
+from rst_seti.utils.visualization import AttentionExtractor, plot_attention_map
 
 
 def load_config(config_path: str) -> dict:
