@@ -55,6 +55,7 @@ def load_cadence_from_files(file_paths: list) -> tuple:
 
     Returns:
         Tuple of (cadence_array, freq_start_mhz, freq_resolution_mhz, target_name).
+        freq_resolution_mhz is signed (negative for descending-frequency files).
         cadence_array has shape (6, 16, n_freq).
     """
     from blimpy import Waterfall
@@ -86,7 +87,11 @@ def load_cadence_from_files(file_paths: list) -> tuple:
 
             if i == 0:
                 freq_start_mhz = wf.header.get('fch1', 0.0)
-                freq_resolution_mhz = abs(wf.header.get('foff', 0.0))
+                # Keep the sign of foff: when negative (channel 0 at the
+                # top of the band) frequency decreases with the channel
+                # index, so taking abs() here places every detection
+                # above fch1, i.e. outside the observed band.
+                freq_resolution_mhz = wf.header.get('foff', 0.0)
 
             print(f"✓ ({data.shape})")
         except OSError as e:

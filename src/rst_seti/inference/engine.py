@@ -274,7 +274,9 @@ class InferenceEngine:
         Args:
             cadence: Array of shape (6, 16, n_freq), raw values.
             freq_start_mhz: Starting frequency in MHz (from HDF5 header).
-            freq_resolution_mhz: Channel width in MHz (from HDF5 header).
+            freq_resolution_mhz: Signed channel width in MHz (the 'foff'
+                HDF5 header field). Negative when frequency decreases
+                with the channel index.
 
         Returns:
             Tuple of (raw_results, clustered_results).
